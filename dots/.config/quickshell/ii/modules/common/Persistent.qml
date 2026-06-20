@@ -83,6 +83,12 @@ Singleton {
                 property bool inhibit: false
             }
 
+            property JsonObject light: JsonObject {
+                property JsonObject night: JsonObject {
+                    property bool active: false
+                }
+            }
+
             property JsonObject overlay: JsonObject {
                 property list<string> open: ["crosshair", "recorder", "volumeMixer", "resources"]
                 property JsonObject crosshair: JsonObject {
