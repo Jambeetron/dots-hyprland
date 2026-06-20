@@ -89,7 +89,7 @@ Singleton {
 
     function load() {
         root.startHyprsunset();
-        root.ensureState();
+        root.restoreState();
     }
 
     Timer {
@@ -100,6 +100,43 @@ Singleton {
             root.ensureState();
             root.setGamma(root.gamma);
         }
+    }
+
+    Timer {
+        id: restoreStateTimer
+        interval: 100
+        repeat: false
+        onTriggered: root.restoreState()
+    }
+
+    function restoreState() {
+        if (!Config.ready || !Persistent.ready) {
+            restoreStateTimer.restart();
+            return;
+        }
+
+        root.reEvaluate();
+        if (root.automatic) {
+            root.ensureState();
+        } else {
+            root.manualActive = Persistent.states.light.night.active;
+            root.manualActiveHour = root.clockHour;
+            root.manualActiveMinute = root.clockMinute;
+            root.setTemperature(root.manualActive);
+        }
+    }
+
+    function setTemperature(active) {
+        if (active) {
+            root.enableTemperature();
+        } else {
+            root.disableTemperature();
+        }
+    }
+
+    function persistTemperatureState(active) {
+        if (!Persistent.ready) return;
+        Persistent.states.light.night.active = active;
     }
 
     function enableTemperature() {
@@ -154,11 +191,8 @@ Singleton {
         }
 
         root.manualActive = active !== undefined ? active : !root.manualActive;
-        if (root.manualActive) {
-            root.enableTemperature();
-        } else {
-            root.disableTemperature();
-        }
+        root.persistTemperatureState(root.manualActive);
+        root.setTemperature(root.manualActive);
     }
 
     // Change temp
