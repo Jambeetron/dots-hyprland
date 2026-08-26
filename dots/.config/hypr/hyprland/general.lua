@@ -25,14 +25,14 @@ hl.gesture({
     fingers = 4,
     direction = "up",
     action = function()
-        hl.dispatch(hl.dsp.global("quickshell:overviewWorkspacesToggle"))
+        hl.dispatch(hl.dsp.global("quickshell:searchToggle"))
     end
 })
 hl.gesture({
     fingers = 4,
     direction = "down",
     action = function()
-        hl.dispatch(hl.dsp.global("quickshell:overviewWorkspacesToggle"))
+        hl.dispatch(hl.dsp.global("quickshell:searchToggle"))
     end
 })
 

@@ -9,24 +9,17 @@ local hyprScripts = "$HOME/.config/hypr/hyprland/scripts"
 local qsIpcCall = "qs -c $qsConfig ipc call"
 local qsIsAlive = qsIpcCall .. " TEST_ALIVE"
 
-hl.bind("SUPER + SUPER_L", hl.dsp.global("quickshell:searchToggleRelease"), { description = "Shell: Toggle search" })
+hl.bind("SUPER + SUPER_L", hl.dsp.global("quickshell:searchToggleRelease"), { description = "Shell: Toggle overview" })
 hl.bind("SUPER + SUPER_R", hl.dsp.global("quickshell:searchToggleRelease"))
 hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd(qsIsAlive .. " || pkill fuzzel || fuzzel"))
 hl.bind("SUPER + SUPER_R", hl.dsp.exec_cmd(qsIsAlive .. " || pkill fuzzel || fuzzel"))
 
-hl.bind("SUPER_L", hl.dsp.global("quickshell:workspaceNumber"), { ignore_mods = true, transparent = true })
-hl.bind("SUPER_R", hl.dsp.global("quickshell:workspaceNumber"), { ignore_mods = true, transparent = true })
-hl.bind("SUPER_L", hl.dsp.global("quickshell:workspaceNumber"),
-    { ignore_mods = true, transparent = true, release = true })
-hl.bind("SUPER_R", hl.dsp.global("quickshell:workspaceNumber"),
-    { ignore_mods = true, transparent = true, release = true })
-hl.bind("SUPER + Tab", hl.dsp.global("quickshell:overviewWorkspacesToggle"), { description = "Shell: Toggle overview" })
+-- Removed workspace number overlay on Super press
+hl.bind("SUPER + Tab", hl.dsp.exec_cmd("qs -c ii ipc call search toggle"), { description = "Shell: Toggle search" })
 hl.bind("SUPER + V", hl.dsp.global("quickshell:overviewClipboardToggle"))
 hl.bind("SUPER + Period", hl.dsp.global("quickshell:overviewEmojiToggle"))
 hl.bind("SUPER + A", hl.dsp.global("quickshell:sidebarLeftToggle"), { description = "Shell: Toggle left sidebar" })
 hl.bind("SUPER + ALT + A", hl.dsp.global("quickshell:sidebarLeftToggleDetach"))
-hl.bind("SUPER + B", hl.dsp.global("quickshell:sidebarLeftToggle"))
-hl.bind("SUPER + O", hl.dsp.global("quickshell:sidebarLeftToggle"))
 hl.bind("SUPER + N", hl.dsp.global("quickshell:sidebarRightToggle"), { description = "Shell: Toggle right sidebar" })
 hl.bind("SUPER + Slash", hl.dsp.global("quickshell:cheatsheetToggle"), { description = "Shell: Toggle cheatsheet" })
 hl.bind("SUPER + K", hl.dsp.global("quickshell:oskToggle"), { description = "Shell: Toggle on-screen keyboard" })
@@ -152,6 +145,14 @@ hl.bind("SUPER + ALT + M", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_SOURCE@ togg
 hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { mouse = true, description = "Window: Move" })
 hl.bind("SUPER + mouse:274", hl.dsp.window.drag(), { mouse = true })
 hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true, description = "Window: Resize" })
+--#/# bind = SUPER + ALT + ←/↑/→/↓,, -- Resize in direction
+for i = 1, 4 do
+    local arrowkey = { "Left", "Right", "Up", "Down" }
+    local resizedir = { { x = -40, y = 0, relative = true }, { x = 40, y = 0, relative = true },
+        { x = 0, y = -40, relative = true }, { x = 0, y = 40, relative = true } }
+    hl.bind("SUPER + ALT + " .. arrowkey[i], hl.dsp.window.resize(resizedir[i]),
+        { description = "Window: Resize " .. arrowkey[i], repeating = true })
+end
 --#/# bind = SUPER + ←/↑/→/↓,, -- Focus in direction
 for i = 1, 4 do
     local arrowkey = { "Left", "Right", "Up", "Down" }
@@ -234,9 +235,15 @@ end
 for i = 1, 4 do
     local key = { "SUPER + ALT + Page_", "CTRL + SUPER + SHIFT + " }
     local keycombos = { key[1] .. "down", key[1] .. "up", key[2] .. "Right", key[2] .. "Left" }
-    local prefix = { "r+", "r-", "r+", "r-" }
+    local prefix = { "r-", "r+", "r+", "r-" }
     hl.bind(keycombos[i], hl.dsp.window.move({ workspace = prefix[i] .. "1" })) -- # [hidden]
 end
+
+hl.bind("CTRL + SUPER + SHIFT + Up", hl.dsp.window.move({ workspace = "r+10" }))
+hl.bind("CTRL + SUPER + SHIFT + Down", hl.dsp.window.move({ workspace = "r-10" }))
+
+hl.bind("SUPER + ALT + Home", hl.dsp.window.move({ workspace = "r+10" }))
+hl.bind("SUPER + ALT + End", hl.dsp.window.move({ workspace = "r-10" }))
 
 hl.bind("SUPER + ALT + S",
     hl.dsp.window.move({ workspace = "special:special", follow = false }), { description = "Window: Send to scratchpad" })
@@ -342,8 +349,7 @@ hl.bind("CTRL + SHIFT + ALT + SUPER + Delete", hl.dsp.exec_cmd("systemctl powero
 
 
 --##! Apps
-hl.bind("SUPER + Return", hl.dsp.exec_cmd(terminal), { description = "App: Terminal" })
-hl.bind("SUPER + T", hl.dsp.exec_cmd(terminal))
+hl.bind("SUPER + T", hl.dsp.exec_cmd(terminal), { description = "App: Terminal" })
 hl.bind("CTRL + ALT + T", hl.dsp.exec_cmd(terminal))
 hl.bind("SUPER + E", hl.dsp.exec_cmd(fileManager), { description = "App: File manager" })
 hl.bind("SUPER + W", hl.dsp.exec_cmd(browser), { description = "App: Browser" })
