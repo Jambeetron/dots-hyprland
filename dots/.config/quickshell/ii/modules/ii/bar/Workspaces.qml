@@ -9,6 +9,7 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Hyprland
 
 ButtonMouseArea {
@@ -52,6 +53,9 @@ ButtonMouseArea {
         const position = root.vertical ? mouseY : mouseX;
         return Math.floor(position / root.workspaceButtonWidth);
     }
+    readonly property int hoveredWsId: root.containsMouse && root.hoverIndex >= 0 && root.hoverIndex < wsModel.shownCount
+        ? wsModel.getWorkspaceIdAt(root.hoverIndex) : 0
+    onHoveredWsIdChanged: hoverIdWriter.write(root.hoveredWsId)
 
     function switchWorkspaceToHovered() {
         Hyprland.dispatch(`hl.dsp.focus({workspace = ${wsModel.getWorkspaceIdAt(hoverIndex)}})`);
@@ -70,10 +74,17 @@ ButtonMouseArea {
             toggleSpecial()
     }
     onWheel: event => {
-        if (event.angleDelta.y < 0)
-            Hyprland.dispatch(`hl.dsp.focus({workspace = "r+1"})`);
-        else if (event.angleDelta.y > 0)
-            Hyprland.dispatch(`hl.dsp.focus({workspace = "r-1"})`);
+        if (event.angleDelta.y < 0) {
+            if (root.superPressAndHeld)
+                Hyprland.dispatch(`hl.dsp.focus({workspace = "r-1"})`);
+            else
+                Hyprland.dispatch(`hl.dsp.focus({workspace = "r+1"})`);
+        } else if (event.angleDelta.y > 0) {
+            if (root.superPressAndHeld)
+                Hyprland.dispatch(`hl.dsp.focus({workspace = "r+1"})`);
+            else
+                Hyprland.dispatch(`hl.dsp.focus({workspace = "r-1"})`);
+        }
     }
 
     // Indications
@@ -316,6 +327,15 @@ ButtonMouseArea {
             Behavior on undirectionalLength {
                 animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
             }
+        }
+    }
+
+    Process {
+        id: hoverIdWriter
+        property string path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/hypr-ws-hover"
+        function write(id) {
+            command = ["sh", "-c", `printf '%s' '${id}' > '${path}'`];
+            running = true;
         }
     }
 
