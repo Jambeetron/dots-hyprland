@@ -2,54 +2,34 @@ pragma Singleton
 import qs.modules.common
 import QtQuick
 import Quickshell
-import Quickshell.Wayland
+import Quickshell.Io
 
-/**
- * A nice wrapper for date and time strings.
- */
 Singleton {
     id: root
 
-    property alias inhibit: idleInhibitor.enabled
-    inhibit: false
-
-    Connections {
-        target: Persistent
-        function onReadyChanged() {
-            if (!Persistent.isNewHyprlandInstance) {
-                root.inhibit = Persistent.states.idle.inhibit;
-            } else {
-                Persistent.states.idle.inhibit = root.inhibit;
-            }
-        }
-    }
+    readonly property bool inhibit: inhibitProcess.running
 
     function toggleInhibit(active = null) {
         if (active !== null) {
-            root.inhibit = active;
+            Persistent.states.idle.inhibit = active;
         } else {
-            root.inhibit = !root.inhibit;
+            Persistent.states.idle.inhibit = !Persistent.states.idle.inhibit;
         }
-        Persistent.states.idle.inhibit = root.inhibit;
     }
 
-    IdleInhibitor {
-        id: idleInhibitor
-        window: PanelWindow {
-            // Inhibitor requires a "visible" surface
-            // Actually not lol
-            implicitWidth: 0
-            implicitHeight: 0
-            color: "transparent"
-            // Just in case...
-            anchors {
-                right: true
-                bottom: true
-            }
-            // Make it not interactable
-            mask: Region {
-                item: null
-            }
-        }
+    function touch() {}
+
+    Process {
+        id: inhibitProcess
+        running: Persistent.states.idle.inhibit
+        command: [
+            "systemd-inhibit",
+            "--what=idle",
+            "--who=Quickshell",
+            "--why=Keep system awake",
+            "--mode=block",
+            "sleep",
+            "1000000000",
+        ]
     }
 }
