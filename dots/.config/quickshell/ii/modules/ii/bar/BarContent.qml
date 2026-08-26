@@ -12,6 +12,10 @@ import qs.modules.common.functions
 Item { // Bar content region
     id: root
 
+    HyprlandLocks {
+        id: locks
+    }
+    
     property var screen: root.QsWindow.window?.screen
     property var brightnessMonitor: Brightness.getMonitorForScreen(screen)
     property real useShortenedForm: (Appearance.sizes.barHellaShortenScreenWidthThreshold >= screen?.width) ? 2 : (Appearance.sizes.barShortenScreenWidthThreshold >= screen?.width) ? 1 : 0
@@ -255,7 +259,7 @@ Item { // Bar content region
                 RowLayout {
                     id: indicatorsRowLayout
                     anchors.centerIn: parent
-                    property real realSpacing: 15
+                    property real realSpacing: 5
                     spacing: 0
 
                     Revealer {
@@ -284,10 +288,24 @@ Item { // Bar content region
                             color: rightSidebarButton.colText
                         }
                     }
-                    HyprlandXkbIndicator {
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.rightMargin: indicatorsRowLayout.realSpacing
+                    Text {
+                        visible: locks.numLock
+                        text: "nl"
                         color: rightSidebarButton.colText
+                        Layout.rightMargin: indicatorsRowLayout.realSpacing
+                    }
+
+                    Text {
+                        visible: locks.capsLock
+                        text: "caps"
+                        color: rightSidebarButton.colText
+                        Layout.rightMargin: indicatorsRowLayout.realSpacing
+                    }
+
+                    Text {
+                        text: HyprlandXkb.currentLayoutCode
+                        color: rightSidebarButton.colText
+                        Layout.rightMargin: indicatorsRowLayout.realSpacing
                     }
                     Revealer {
                         reveal: Notifications.silent || Notifications.unread > 0
