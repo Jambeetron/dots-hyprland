@@ -141,8 +141,19 @@ Item {
                                 acceptedButtons: Qt.LeftButton
                                 onPressed: {
                                     if (root.draggingTargetWorkspace === -1) {
-                                        GlobalStates.overviewOpen = false
-                                        Hyprland.dispatch(`hl.dsp.focus({ workspace = ${workspace.workspaceValue} })`)
+                                        // Con seleccion activa: mover las ventanas seleccionadas a este
+                                        // workspace SIN cambiar el workspace actual ni cerrar el overview.
+                                        const sel = GlobalStates.selectedWindows;
+                                        if (sel.length > 0) {
+                                            for (const addr of sel) {
+                                                Hyprland.dispatch(`hl.dsp.window.move({ workspace = ${workspace.workspaceValue}, follow = false, window = "address:${addr}" })`);
+                                                Hyprland.dispatch(`hl.dsp.window.set_prop({ prop = "opacity", value = "1", window = "address:${addr}" })`);
+                                            }
+                                            GlobalStates.selectedWindows = [];
+                                        } else {
+                                            GlobalStates.overviewOpen = false
+                                            Hyprland.dispatch(`hl.dsp.focus({ workspace = ${workspace.workspaceValue} })`)
+                                        }
                                     }
                                 }
                             }
@@ -249,9 +260,10 @@ Item {
                         hoverEnabled: true
                         onEntered: hovered = true // For hover color change
                         onExited: hovered = false // For hover color change
-                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                         drag.target: parent
                         onPressed: (mouse) => {
+                            if (mouse.button !== Qt.LeftButton) return
                             root.draggingFromWorkspace = windowData?.workspace.id
                             window.pressed = true
                             window.Drag.active = true
@@ -260,7 +272,8 @@ Item {
                             window.Drag.hotSpot.y = mouse.y
                             // console.log(`[OverviewWindow] Dragging window ${windowData?.address} from position (${window.x}, ${window.y})`)
                         }
-                        onReleased: {
+                        onReleased: (mouse) => {
+                            if (mouse.button !== Qt.LeftButton) return
                             const targetWorkspace = root.draggingTargetWorkspace
                             window.pressed = false
                             window.Drag.active = false
@@ -283,11 +296,39 @@ Item {
                             if (!windowData) return;
 
                             if (event.button === Qt.LeftButton) {
+                                // Con seleccion activa, el click sobre una ventana cuenta como click sobre
+                                // SU workspace: mover ahi las seleccionadas, sin cambiar el workspace actual.
+                                const selm = GlobalStates.selectedWindows;
+                                if (selm.length > 0 && windowData.workspace) {
+                                    const targetWs = windowData.workspace.id;
+                                    for (const addr of selm) {
+                                        Hyprland.dispatch(`hl.dsp.window.move({ workspace = ${targetWs}, follow = false, window = "address:${addr}" })`);
+                                        Hyprland.dispatch(`hl.dsp.window.set_prop({ prop = "opacity", value = "1", window = "address:${addr}" })`);
+                                    }
+                                    GlobalStates.selectedWindows = [];
+                                    event.accepted = true
+                                    return
+                                }
                                 GlobalStates.overviewOpen = false
                                 Hyprland.dispatch(`hl.dsp.focus({window = "address:${windowData.address}"})`)
                                 event.accepted = true
                             } else if (event.button === Qt.MiddleButton) {
                                 Hyprland.dispatch(`hl.dsp.window.close({window = "address:${windowData.address}"})`)
+                                event.accepted = true
+                            } else if (event.button === Qt.RightButton) {
+                                // Seleccion multiple: click derecho alterna la seleccion de la ventana.
+                                // Las seleccionadas se atenuan (opacidad 0.85) hasta moverlas o deseleccionarlas.
+                                const addr = windowData.address;
+                                const sel = GlobalStates.selectedWindows.slice();
+                                const idx = sel.indexOf(addr);
+                                if (idx === -1) {
+                                    sel.push(addr);
+                                    Hyprland.dispatch(`hl.dsp.window.set_prop({ prop = "opacity", value = "0.85", window = "address:${addr}" })`);
+                                } else {
+                                    sel.splice(idx, 1);
+                                    Hyprland.dispatch(`hl.dsp.window.set_prop({ prop = "opacity", value = "1", window = "address:${addr}" })`);
+                                }
+                                GlobalStates.selectedWindows = sel;
                                 event.accepted = true
                             }
                         }

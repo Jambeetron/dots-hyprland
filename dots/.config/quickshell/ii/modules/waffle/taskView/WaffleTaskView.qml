@@ -77,7 +77,7 @@ Scope {
     }
 
     IpcHandler {
-        target: "search"
+        target: "taskView"
 
         function toggle() {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
@@ -101,7 +101,7 @@ Scope {
 
     GlobalShortcut {
         name: "overviewWorkspacesToggle"
-        description: "Toggles overview on press"
+        description: "Toggles search on press"
 
         onPressed: {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;

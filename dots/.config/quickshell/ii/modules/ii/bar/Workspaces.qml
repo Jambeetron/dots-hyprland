@@ -9,6 +9,7 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Hyprland
 
 ButtonMouseArea {
@@ -30,7 +31,10 @@ ButtonMouseArea {
     property real workspaceIconSizeShrinked: workspaceButtonWidth * 0.55
     property real workspaceIconOpacityShrinked: 1
     property real workspaceIconMarginShrinked: -4
-    property int workspaceIndexInGroup: (monitor?.activeWorkspace?.id - 1) % wsModel.shownCount
+    property int workspaceIndexInGroup: {
+        const modelIndex = (monitor?.activeWorkspace?.id - 1) % wsModel.shownCount;
+        return vertical ? wsModel.shownCount - modelIndex - 1 : modelIndex;
+    }
     property real specialTextSize: workspaceButtonWidth * 0.5
 
     Layout.alignment: vertical ? Qt.AlignHCenter : Qt.AlignVCenter
@@ -53,8 +57,20 @@ ButtonMouseArea {
         return Math.floor(position / root.workspaceButtonWidth);
     }
 
+    function workspaceModelIndex(displayIndex) {
+        return root.vertical ? wsModel.shownCount - displayIndex - 1 : displayIndex;
+    }
+
+    function workspaceIdAtDisplayIndex(displayIndex) {
+        return wsModel.getWorkspaceIdAt(workspaceModelIndex(displayIndex));
+    }
+
+    readonly property int hoveredWsId: root.containsMouse && root.hoverIndex >= 0 && root.hoverIndex < wsModel.shownCount
+        ? root.workspaceIdAtDisplayIndex(root.hoverIndex) : 0
+    onHoveredWsIdChanged: hoverIdWriter.write(root.hoveredWsId)
+
     function switchWorkspaceToHovered() {
-        Hyprland.dispatch(`hl.dsp.focus({workspace = ${wsModel.getWorkspaceIdAt(hoverIndex)}})`);
+        Hyprland.dispatch(`hl.dsp.focus({workspace = ${root.workspaceIdAtDisplayIndex(hoverIndex)}})`);
     }
 
     function toggleSpecial() {
@@ -70,12 +86,15 @@ ButtonMouseArea {
             toggleSpecial()
     }
     onWheel: event => {
-        if (event.angleDelta.y < 0)
-            Hyprland.dispatch(`hl.dsp.focus({workspace = "r+1"})`);
-        else if (event.angleDelta.y > 0)
-            Hyprland.dispatch(`hl.dsp.focus({workspace = "r-1"})`);
+        // The global Super+wheel bind contributes two forward steps over the
+        // bar; add nine here to keep the combined movement at ten.
+        const superWheelStep = root.superPressAndHeld ? 9 : 1;
+        if (event.angleDelta.y > 0) {
+            Hyprland.dispatch(`hl.dsp.focus({workspace = "r+${superWheelStep}"})`);
+        } else if (event.angleDelta.y < 0) {
+            Hyprland.dispatch(`hl.dsp.focus({workspace = "r-${superWheelStep}"})`);
+        }
     }
-
     // Indications
     Item {
         id: regularWorkspaces
@@ -112,10 +131,15 @@ ButtonMouseArea {
                 delegate: Item {
                     id: wsBg
                     required property int index
-                    readonly property int wsId: wsModel.getWorkspaceIdAt(index)
-                    property bool currentOccupied: wsModel.occupied[index] && wsId != wsModel.fakeWorkspace
-                    property bool previousOccupied: index > 0 && wsModel.occupied[index - 1] && (wsId - 1) != wsModel.fakeWorkspace
-                    property bool nextOccupied: index < wsModel.shownCount - 1 && wsModel.occupied[index + 1] && (wsId + 1) != wsModel.fakeWorkspace
+                    readonly property int modelIndex: root.workspaceModelIndex(index)
+                    readonly property int wsId: root.workspaceIdAtDisplayIndex(index)
+                    property bool currentOccupied: wsModel.occupied[modelIndex] && wsId != wsModel.fakeWorkspace
+                    property bool previousOccupied: index > 0
+                        && wsModel.occupied[root.workspaceModelIndex(index - 1)]
+                        && root.workspaceIdAtDisplayIndex(index - 1) != wsModel.fakeWorkspace
+                    property bool nextOccupied: index < wsModel.shownCount - 1
+                        && wsModel.occupied[root.workspaceModelIndex(index + 1)]
+                        && root.workspaceIdAtDisplayIndex(index + 1) != wsModel.fakeWorkspace
                     implicitWidth: root.workspaceButtonWidth
                     implicitHeight: root.workspaceButtonWidth
 
@@ -216,7 +240,7 @@ ButtonMouseArea {
                 model: wsModel.shownCount
                 delegate: WorkspaceItem {
                     id: wsApp
-                    property var biggestWindow: wsModel.biggestWindow[index]
+                    property var biggestWindow: wsModel.biggestWindow[root.workspaceModelIndex(index)]
                     property var mainAppIconSource: Quickshell.iconPath(AppSearch.guessIcon(biggestWindow?.class), "image-missing")
 
                     AppIcon {
@@ -319,6 +343,15 @@ ButtonMouseArea {
         }
     }
 
+    Process {
+        id: hoverIdWriter
+        property string path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/hypr-ws-hover"
+        function write(id) {
+            command = ["sh", "-c", `printf '%s' '${id}' > '${path}'`];
+            running = true;
+        }
+    }
+
     /////////////////// Super key press handling ///////////////////
     Timer {
         id: superPressAndHeldTimer
@@ -360,16 +393,15 @@ ButtonMouseArea {
 
     component WorkspaceItem: Item {
         required property int index
-        readonly property int wsId: wsModel.getWorkspaceIdAt(index)
+        readonly property int wsId: root.workspaceIdAtDisplayIndex(index)
         implicitWidth: root.vertical ? root.barThickness : root.workspaceButtonWidth
         implicitHeight: root.vertical ? root.workspaceButtonWidth : root.barThickness
     }
 
     component NumberWorkspaceItem: WorkspaceItem {
         id: wsNum
-        property bool hasBiggestWindow: !!wsModel.biggestWindow[index]
-        property int wsId: wsModel.getWorkspaceIdAt(index)
-        property color contentColor: (wsModel.occupied[wsNum.index] && wsId !== wsModel.fakeWorkspace) ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1Inactive
+        property bool hasBiggestWindow: !!wsModel.biggestWindow[root.workspaceModelIndex(index)]
+        property color contentColor: (wsModel.occupied[root.workspaceModelIndex(wsNum.index)] && wsId !== wsModel.fakeWorkspace) ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1Inactive
         property bool showingNumbers: {
             if (root.superPressAndHeld)
                 return true;

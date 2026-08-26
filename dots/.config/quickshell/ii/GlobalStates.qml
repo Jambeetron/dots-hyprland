@@ -28,6 +28,20 @@ Singleton {
     property bool sessionOpen: false
     property bool superDown: false
     property bool superReleaseMightTrigger: true
+    // Direcciones de ventanas seleccionadas en el overview (click derecho).
+    // Click izquierdo sobre un workspace del overview las mueve ahi (sin cambiar de workspace).
+    property var selectedWindows: []
+
+    // Las ventanas que se cierran salen de la seleccion al instante: si una ventana
+    // reabierta reutiliza la direccion de una cerrada, no hereda la seleccion.
+    Connections {
+        target: HyprlandData
+        function onAddressesChanged() {
+            const filtered = root.selectedWindows.filter(a => HyprlandData.addresses.includes(a));
+            if (filtered.length !== root.selectedWindows.length)
+                root.selectedWindows = filtered;
+        }
+    }
     property bool wallpaperSelectorOpen: false
     property bool workspaceShowNumbers: false
 

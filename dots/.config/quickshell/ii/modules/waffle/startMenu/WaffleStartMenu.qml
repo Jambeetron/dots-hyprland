@@ -87,6 +87,10 @@ Scope {
         target: "search"
 
         function toggle() {
+            if (GlobalStates.overviewOpen) {
+                GlobalStates.overviewOpen = false;
+                return;
+            }
             GlobalStates.searchOpen = !GlobalStates.searchOpen;
         }
         function close() {
