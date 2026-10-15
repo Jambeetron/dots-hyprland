@@ -79,6 +79,17 @@ Singleton {
         }, null);
     }
 
+    // Forces a full refresh of Hyprland data. Used after waking from sleep, where
+    // quickshell can lose track of existing windows (RawEvent missing) leaving
+    // biggestWindowForWorkspace() empty and the bar showing "Desktop"/"Workspace N".
+    IpcHandler {
+        target: "refreshHyprlandState"
+
+        function activate(): void {
+            root.updateAll();
+        }
+    }
+
     Component.onCompleted: {
         updateAll();
     }
