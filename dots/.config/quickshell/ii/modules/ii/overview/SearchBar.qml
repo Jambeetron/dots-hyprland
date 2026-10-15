@@ -156,4 +156,18 @@ RowLayout {
             }
         }
     }
+
+    IconToolbarButton {
+        id: clipboardWipeButton
+        Layout.topMargin: 4
+        Layout.bottomMargin: 4
+        Layout.rightMargin: 4
+        visible: root.searchPrefixType === SearchBar.SearchPrefixType.Clipboard
+        onClicked: Cliphist.wipe()
+        text: "delete"
+
+        StyledToolTip {
+            text: Translation.tr("Clear clipboard history")
+        }
+    }
 }
