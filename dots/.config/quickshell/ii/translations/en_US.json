@@ -607,9 +607,21 @@
   "Force hover open at absolute corner": "Force hover open at absolute corner",
   "Open the shell config file\nAlternatively right-click to copy path": "Open the shell config file\nAlternatively right-click to copy path",
   "Recognize music": "Recognize music",
+  "Clear clipboard history": "Clear clipboard history",
   "Stroke width": "Stroke width",
   "Use varying shapes for password characters": "Use varying shapes for password characters",
   "Battery full": "Battery full",
   "Pin": "Pin",
-  "Unpin": "Unpin"
+  "Unpin": "Unpin",
+  "Invoke action": "Invoke action",
+  "Show QR code": "Show QR code",
+  "Edit contents": "Edit contents",
+  "Star": "Star",
+  "Unstar": "Unstar",
+  "All history": "All history",
+  "Starred only": "Starred only",
+  "Ctrl+S to toggle": "Ctrl+S to toggle",
+  "Clear clipboard history (keeps starred) · Ctrl+Shift+Del": "Clear clipboard history (keeps starred) · Ctrl+Shift+Del",
+  "Clear clipboard history · Ctrl+Shift+Del": "Clear clipboard history · Ctrl+Shift+Del",
+  "Couldn't generate QR code (content too long?)": "Couldn't generate QR code (content too long?)"
 }

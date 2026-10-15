@@ -65,6 +65,7 @@
   "Base URL": "URL base",
   "Cheat sheet": "Hoja de trucos",
   "Recognize music": "Reconocer música",
+  "Clear clipboard history": "Limpiar historial del portapapeles",
   "Region width": "Ancho de región",
   "Wallpaper & Colors": "Fondo de pantalla y colores",
   "Sounds": "Sonidos",
@@ -745,5 +746,16 @@
   "Font size": "Tamaño de fuente",
   "System": "Sistema",
   "More Internet settings": "Más ajustes de Internet",
-  "Utility buttons": "Botones de utilidad"
+  "Utility buttons": "Botones de utilidad",
+  "Invoke action": "Invocar acción",
+  "Show QR code": "Mostrar código QR",
+  "Edit contents": "Editar contenido",
+  "Star": "Destacar",
+  "Unstar": "Quitar destacado",
+  "All history": "Todo el historial",
+  "Starred only": "Solo destacados",
+  "Ctrl+S to toggle": "Ctrl+S para alternar",
+  "Clear clipboard history (keeps starred) · Ctrl+Shift+Del": "Limpiar historial del portapapeles (conserva destacados) · Ctrl+Shift+Supr",
+  "Clear clipboard history · Ctrl+Shift+Del": "Limpiar historial del portapapeles · Ctrl+Shift+Supr",
+  "Couldn't generate QR code (content too long?)": "No se pudo generar el código QR (¿contenido demasiado largo?)"
 }

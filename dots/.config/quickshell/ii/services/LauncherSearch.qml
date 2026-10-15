@@ -1,5 +1,6 @@
 pragma Singleton
 
+import qs
 import qs.modules.common
 import qs.modules.common.models
 import qs.modules.common.functions
@@ -174,7 +175,9 @@ Singleton {
         if (root.query.startsWith(Config.options.search.prefix.clipboard)) {
             // Clipboard
             const searchString = StringUtils.cleanPrefix(root.query, Config.options.search.prefix.clipboard);
-            return Cliphist.fuzzyQuery(searchString).map((entry, index, array) => {
+            // Note: isStarred() is only evaluated in "Starred only" mode, so (un)starring
+            // in "All history" doesn't rebuild the list
+            return Cliphist.fuzzyQuery(searchString).filter(entry => !Cliphist.starredOnly || Cliphist.isStarred(entry)).map((entry, index, array) => {
                 const mightBlurImage = Cliphist.entryIsImage(entry) && root.clipboardWorkSafetyActive;
                 let shouldBlurImage = mightBlurImage;
                 if (mightBlurImage) {
@@ -189,21 +192,37 @@ Singleton {
                     execute: () => {
                         Cliphist.copy(entry);
                     },
-                    actions: [resultComp.createObject(null, {
-                            name: Translation.tr("Copy"),
-                            iconName: "content_copy",
+                    actions: (() => {
+                        const isImage = Cliphist.entryIsImage(entry);
+                        const make = (id, name, icon, exec) => resultComp.createObject(null, {
+                            id: id,
+                            name: name,
+                            iconName: icon,
                             iconType: LauncherSearchResult.IconType.Material,
-                            execute: () => {
-                                Cliphist.copy(entry);
-                            }
-                        }), resultComp.createObject(null, {
-                            name: Translation.tr("Delete"),
-                            iconName: "delete",
-                            iconType: LauncherSearchResult.IconType.Material,
-                            execute: () => {
-                                Cliphist.deleteEntry(entry);
-                            }
-                        })],
+                            execute: exec
+                        });
+                        const acts = [make("cliphist-invoke", Translation.tr("Invoke action"), "bolt", () => {
+                                GlobalStates.searchOpen = false;
+                                Cliphist.invoke(entry);
+                            })];
+                        if (!isImage) {
+                            acts.push(make("cliphist-qr", Translation.tr("Show QR code"), "qr_code_2", () => {})); // Handled by SearchItem
+                            acts.push(make("cliphist-edit", Translation.tr("Edit contents"), "edit", () => {
+                                GlobalStates.searchOpen = false;
+                                Cliphist.edit(entry);
+                            }));
+                        }
+                        acts.push(make("cliphist-star", Translation.tr("Star"), "star", () => {
+                            Cliphist.toggleStar(entry);
+                        }));
+                        acts.push(make("cliphist-copy", Translation.tr("Copy"), "content_copy", () => {
+                            Cliphist.copy(entry);
+                        }));
+                        acts.push(make("cliphist-delete", Translation.tr("Delete"), "delete", () => {
+                            Cliphist.deleteEntry(entry);
+                        }));
+                        return acts;
+                    })(),
                     blurImage: shouldBlurImage
                 });
             }).filter(Boolean);

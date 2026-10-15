@@ -8,6 +8,7 @@ import qs.modules.common.functions
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Widgets
 import Quickshell.Hyprland
 
@@ -34,6 +35,68 @@ RippleButton {
     property string materialSymbol: entry.iconType === LauncherSearchResult.IconType.Material ? entry?.iconName ?? "" : ""
     property string cliphistRawString: entry?.rawValue ?? ""
     property bool blurImage: entry?.blurImage ?? false
+    readonly property bool isClipboardEntry: root.cliphistRawString.length > 0
+    readonly property bool starred: root.isClipboardEntry && Cliphist.isStarred(root.cliphistRawString)
+
+    signal deleteRequested() // Emitted right before a clipboard entry is deleted
+
+    // ←/→ navigation between the action buttons (-1 = none, Enter acts on the row itself)
+    readonly property var shownActions: root.isClipboardEntry ? (root.entry?.actions ?? []) : (root.entry?.actions ?? []).slice(0, 4)
+    property int actionIndex: -1
+    onSelectedChanged: if (!root.selected) root.actionIndex = -1
+    function moveAction(delta) {
+        const n = root.shownActions.length;
+        if (n === 0) return false;
+        root.actionIndex = Math.max(-1, Math.min(n - 1, root.actionIndex + delta));
+        return true;
+    }
+    function triggerAction(action) {
+        switch (action.id) {
+        case "cliphist-qr":
+            root.toggleQr();
+            break;
+        case "cliphist-delete":
+            root.requestDelete();
+            break;
+        default:
+            action.execute();
+        }
+    }
+    function triggerCurrentAction() {
+        const action = root.shownActions[root.actionIndex];
+        if (!action) return false;
+        root.triggerAction(action);
+        return true;
+    }
+
+    function requestDelete() {
+        const deleteAction = (root.entry?.actions ?? []).find(action => action.id === "cliphist-delete");
+        if (!deleteAction) return false;
+        root.deleteRequested();
+        deleteAction.execute();
+        return true;
+    }
+
+    // QR code (generated on demand into /tmp)
+    property string qrPath: ""
+    function toggleQr() {
+        if (root.qrPath !== "") {
+            root.qrPath = "";
+            return;
+        }
+        const id = root.cliphistRawString.match(/^\s*(\d+)/)?.[1] ?? "x";
+        qrProc.outPath = `/tmp/quickshell/media/cliphist-qr/${id}.png`;
+        qrProc.running = true;
+    }
+    Process {
+        id: qrProc
+        property string outPath
+        command: ["bash", "-c", 'mkdir -p "$(dirname "$3")" && printf "%s\\n" "$1" | "$2" decode | qrencode -s 8 -m 2 -o "$3"', "bash", root.cliphistRawString, Cliphist.cliphistBinary, qrProc.outPath]
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0) root.qrPath = qrProc.outPath;
+            else Quickshell.execDetached(["notify-send", "Clipboard", Translation.tr("Couldn't generate QR code (content too long?)"), "-a", "Shell"]);
+        }
+    }
     
     visible: root.entryShown
     property int horizontalMargin: 10
@@ -108,12 +171,22 @@ RippleButton {
         root.itemExecute()
     }
     Keys.onPressed: (event) => {
-        if (event.key === Qt.Key_Delete && event.modifiers === Qt.ShiftModifier) {
+        if (event.key === Qt.Key_Delete && root.isClipboardEntry && !(event.modifiers & Qt.ControlModifier)) {
+            root.requestDelete();
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Delete && event.modifiers === Qt.ShiftModifier) {
             const deleteAction = root.entry.actions.find(action => action.name == Translation.tr("Delete"));
 
             if (deleteAction) {
                 deleteAction.execute()
             }
+        } else if ((event.key === Qt.Key_Left || event.key === Qt.Key_Right) && event.modifiers === Qt.NoModifier
+                && root.shownActions.length > 0) {
+            root.moveAction(event.key === Qt.Key_Right ? 1 : -1);
+            event.accepted = true;
+        } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && root.actionIndex >= 0) {
+            root.triggerCurrentAction();
+            event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
             root.keyboardDown = true
             root.clicked()
@@ -229,6 +302,37 @@ RippleButton {
                     text: root.selected ? StringUtils.escapeHtml(root.itemName) : root.displayContent
                 }
             }
+            Loader { // QR code for clipboard entry
+                id: qrLoader
+                active: root.qrPath !== ""
+                visible: active
+                Layout.fillWidth: true
+                Layout.topMargin: 6
+                Layout.bottomMargin: 4
+                // Centered on the whole row (not the text column), so it doesn't
+                // shift when the action buttons appear on hover/focus
+                sourceComponent: Item {
+                    implicitWidth: 0
+                    implicitHeight: qrBox.height
+                    Rectangle {
+                        id: qrBox
+                        readonly property real size: 240
+                        width: size
+                        height: size
+                        x: root.width / 2 - size / 2 - rowLayout.x - contentColumn.x
+                        color: "white"
+                        radius: Appearance.rounding.small
+                        Image {
+                            anchors.fill: parent
+                            anchors.margins: 6
+                            source: root.qrPath === "" ? "" : `file://${root.qrPath}`
+                            fillMode: Image.PreserveAspectFit
+                            smooth: false
+                            cache: false
+                        }
+                    }
+                }
+            }
             Loader { // Clipboard image preview
                 active: root.cliphistRawString && Cliphist.entryIsImage(root.cliphistRawString)
                 sourceComponent: CliphistImage {
@@ -253,20 +357,26 @@ RippleButton {
         }
 
         RowLayout {
+            // Clipboard entries only show their actions on hover / keyboard focus
+            visible: !root.isClipboardEntry || root.selected
             Layout.alignment: Qt.AlignTop
             Layout.topMargin: root.buttonVerticalPadding
             Layout.bottomMargin: -root.buttonVerticalPadding // Why is this necessary? Good question.
             spacing: 4
             Repeater {
-                model: (root.entry.actions ?? []).slice(0, 4)
+                model: root.shownActions
                 delegate: RippleButton {
                     id: actionButton
                     required property var modelData
+                    required property int index
+                    readonly property bool keyboardSelected: actionButton.index === root.actionIndex
                     property var iconType: modelData.iconType
                     property string iconName: modelData.iconName ?? ""
                     implicitHeight: 34
                     implicitWidth: 34
 
+                    colBackground: actionButton.keyboardSelected ? Appearance.colors.colSecondaryContainer
+                        : ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 1)
                     colBackgroundHover: Appearance.colors.colSecondaryContainerHover
                     colRipple: Appearance.colors.colSecondaryContainerActive
 
@@ -279,6 +389,8 @@ RippleButton {
                             sourceComponent: MaterialSymbol {
                                 text: actionButton.iconName || "video_settings"
                                 font.pixelSize: Appearance.font.pixelSize.hugeass
+                                fill: ((actionButton.modelData.id === "cliphist-star" && root.starred)
+                                    || (actionButton.modelData.id === "cliphist-qr" && root.qrPath !== "")) ? 1 : 0
                                 color: root.colForeground
                             }
                         }
@@ -292,10 +404,18 @@ RippleButton {
                         }
                     }
 
-                    onClicked: modelData.execute()
+                    onClicked: root.triggerAction(modelData)
 
                     StyledToolTip {
-                        text: modelData.name
+                        alternativeVisibleCondition: actionButton.keyboardSelected
+                        text: {
+                            switch (actionButton.modelData.id) {
+                            case "cliphist-star":
+                                return root.starred ? Translation.tr("Unstar") : Translation.tr("Star");
+                            default:
+                                return actionButton.modelData.name;
+                            }
+                        }
                     }
                 }
             }

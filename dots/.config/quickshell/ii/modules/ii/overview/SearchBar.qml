@@ -14,6 +14,7 @@ RowLayout {
     property bool animateWidth: false
     property alias searchInput: searchInput
     property string searchingText
+    property var keyHandler: null // (event) => bool, runs before the search box handles a key
 
     function forceFocus() {
         searchInput.forceActiveFocus();
@@ -91,6 +92,7 @@ RowLayout {
         }
 
         Keys.onPressed: event => {
+            if (root.keyHandler && root.keyHandler(event)) return;
             if (event.key === Qt.Key_Tab) {
                 if (LauncherSearch.results.length === 0) return;
                 const tabbedText = LauncherSearch.results[0].name;
@@ -154,6 +156,21 @@ RowLayout {
             Behavior on color {
                 animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
             }
+        }
+    }
+
+    IconToolbarButton {
+        id: clipboardWipeButton
+        Layout.topMargin: 4
+        Layout.bottomMargin: 4
+        Layout.rightMargin: 4
+        visible: root.searchPrefixType === SearchBar.SearchPrefixType.Clipboard
+        onClicked: Cliphist.wipe()
+        text: "delete"
+
+        StyledToolTip {
+            text: Cliphist.hasStarred ? Translation.tr("Clear clipboard history (keeps starred) · Ctrl+Shift+Del")
+                : Translation.tr("Clear clipboard history · Ctrl+Shift+Del")
         }
     }
 }

@@ -42,6 +42,80 @@ Singleton {
         });
     }
 
+    // ---------- Starred entries ----------
+    // Keyed by the entry content (without the cliphist id) so a star survives re-copying.
+    property string starredFilePath: FileUtils.trimFileProtocol(`${Directories.state}/user/cliphist_starred.json`)
+    property list<string> starred: []
+    property bool starredOnly: false
+    readonly property bool hasStarred: root.starred.length > 0 && root.entries.some(e => root.starred.includes(root.entryKey(e)))
+    onHasStarredChanged: if (!root.hasStarred) root.starredOnly = false
+
+    function entryKey(entry) {
+        return entry.replace(/^\s*\d+\t/, "");
+    }
+    function isStarred(entry) {
+        return root.starred.includes(root.entryKey(entry));
+    }
+    function toggleStar(entry) {
+        const key = root.entryKey(entry);
+        if (root.starred.includes(key))
+            root.starred = root.starred.filter(k => k !== key);
+        else
+            root.starred = [...root.starred, key];
+        starredFileView.setText(JSON.stringify(root.starred));
+    }
+    function unstar(entry) {
+        if (root.isStarred(entry)) root.toggleStar(entry);
+    }
+
+    FileView {
+        id: starredFileView
+        path: Qt.resolvedUrl(root.starredFilePath)
+        onLoaded: {
+            try {
+                root.starred = JSON.parse(starredFileView.text());
+            } catch (e) {
+                console.error("[Cliphist] Bad starred file:", e);
+            }
+        }
+        onLoadFailed: error => {
+            if (error == FileViewError.FileNotFound) starredFileView.setText("[]");
+        }
+    }
+
+    // ---------- Extra actions ----------
+    // Invoke: open URLs / paths / images with the default app, otherwise web-search the text
+    function invoke(entry) {
+        Quickshell.execDetached([FileUtils.trimFileProtocol(`${Directories.scriptPath}/cliphist/invoke.sh`), entry, root.cliphistBinary, Config.options.search.engineBaseUrl]);
+    }
+
+    // Edit: open the full text in nvim (kitty); if it changed, the entry is replaced (keeping its star)
+    function edit(entry) {
+        if (editProc.running) return;
+        editProc.wasStarred = root.isStarred(entry);
+        editProc.newTop = "";
+        editProc.oldEntry = entry;
+        editProc.command = [FileUtils.trimFileProtocol(`${Directories.scriptPath}/cliphist/edit.sh`), entry, root.cliphistBinary];
+        editProc.running = true;
+    }
+
+    Process {
+        id: editProc
+        property bool wasStarred: false
+        property string oldEntry: ""
+        property string newTop: ""
+        stdout: SplitParser {
+            onRead: line => editProc.newTop = line
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (editProc.wasStarred && editProc.newTop.length > 0) {
+                root.unstar(editProc.oldEntry);
+                if (!root.isStarred(editProc.newTop)) root.toggleStar(editProc.newTop);
+            }
+            root.refresh();
+        }
+    }
+
     function entryIsImage(entry) {
         return !!(/^\d+\t\[\[.*binary data.*\d+x\d+.*\]\]$/.test(entry))
     }
@@ -95,6 +169,7 @@ Singleton {
     }
 
     function deleteEntry(entry) {
+        root.unstar(entry);
         deleteProc.deleteEntry(entry);
     }
 
@@ -106,8 +181,22 @@ Singleton {
         }
     }
 
+    Process {
+        id: wipeKeepStarredProc
+        onExited: (exitCode, exitStatus) => {
+            root.refresh();
+        }
+    }
+
+    // Clears history but keeps starred entries
     function wipe() {
-        wipeProc.running = true;
+        if (!root.hasStarred) {
+            wipeProc.running = true;
+            return;
+        }
+        const toDelete = root.entries.filter(e => !root.isStarred(e));
+        wipeKeepStarredProc.command = ["bash", "-c", `bin="$1"; shift; for e in "$@"; do printf '%s\\n' "$e" | "$bin" delete; done`, "bash", root.cliphistBinary, ...toDelete];
+        wipeKeepStarredProc.running = true;
     }
 
     Connections {
