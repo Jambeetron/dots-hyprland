@@ -11,10 +11,16 @@ Item {
     id: root
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.QsWindow.window?.screen)
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
+    // After a long suspend QsWindow.screen can briefly be undefined.  Use the
+    // focused Hyprland monitor as a fallback so the bar does not get stuck on
+    // the Desktop/Workspace placeholder.
+    readonly property var monitorData: HyprlandData.monitors.find(m => m.id === root.monitor?.id)
+        ?? HyprlandData.monitors.find(m => m.focused)
+        ?? HyprlandData.monitors[0]
 
     property string activeWindowAddress: `0x${activeWindow?.HyprlandToplevel?.address}`
     property bool focusingThisMonitor: HyprlandData.activeWorkspace?.monitor == monitor?.name
-    property var biggestWindow: HyprlandData.biggestWindowForWorkspace(HyprlandData.monitors[root.monitor?.id]?.activeWorkspace.id)
+    property var biggestWindow: HyprlandData.biggestWindowForWorkspace(root.monitorData?.activeWorkspace?.id)
 
     implicitWidth: colLayout.implicitWidth
 
@@ -44,7 +50,7 @@ Item {
             elide: Text.ElideRight
             text: root.focusingThisMonitor && root.activeWindow?.activated && root.biggestWindow ? 
                 root.activeWindow?.title :
-                (root.biggestWindow?.title) ?? `${Translation.tr("Workspace")} ${monitor?.activeWorkspace?.id ?? 1}`
+                (root.biggestWindow?.title) ?? `${Translation.tr("Workspace")} ${root.monitorData?.activeWorkspace?.id ?? 1}`
         }
 
     }
