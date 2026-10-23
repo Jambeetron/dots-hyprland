@@ -5,6 +5,7 @@
 require("custom.wsextra")
 
 hl.bind("SUPER + U", hl.dsp.exec_cmd("wayscriber --daemon-toggle"), { description = "App: Wayscriber" })
+hl.bind("SUPER + B", hl.dsp.exec_cmd("nwg-drawer -d"), { description = "App: nwg-drawer" })
 
 -- CTRL+SUPER+Up/Down: saltar un grupo completo de workspaces (10)
 hl.unbind("CTRL + SUPER + Up")
