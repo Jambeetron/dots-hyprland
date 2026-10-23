@@ -5,3 +5,4 @@
 require("custom.wsextra")
 
 hl.bind("SUPER + U", hl.dsp.exec_cmd("wayscriber --daemon-toggle"), { description = "App: Wayscriber" })
+hl.bind("SUPER + B", hl.dsp.exec_cmd("nwg-drawer -d"), { description = "App: nwg-drawer" })
