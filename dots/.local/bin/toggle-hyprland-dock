@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+home = Path.home()
+data_home = Path(os.environ.get("XDG_DATA_HOME", home / ".local/share"))
+bin_home = Path(os.environ.get("XDG_BIN_HOME", home / ".local/bin"))
+dock_shell = data_home / "hyprland-dock/shell.qml"
+launcher = bin_home / "hyprland-dock"
+
+result = subprocess.run(["qs", "list", "--all", "--json"], capture_output=True, text=True)
+if result.returncode != 0:
+    sys.stderr.write(result.stderr)
+    sys.exit(result.returncode)
+
+instances = json.loads(result.stdout)
+dock_running = any(
+    Path(instance.get("config_path", "")).resolve() == dock_shell.resolve()
+    for instance in instances
+)
+
+command = [str(launcher), "stop"] if dock_running else [str(launcher), "--daemonize"]
+subprocess.run(command, check=True)

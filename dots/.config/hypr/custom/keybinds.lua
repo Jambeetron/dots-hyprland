@@ -5,6 +5,12 @@
 require("custom.wsextra")
 
 hl.bind("SUPER + U", hl.dsp.exec_cmd("wayscriber --daemon-toggle"), { description = "App: Wayscriber" })
+hl.bind("SUPER + B", hl.dsp.exec_cmd("nwg-drawer -d"), { description = "App: nwg-drawer" })
+-- Mousekeys handles Super+H internally through its input daemon.
+hl.bind("SUPER + ALT + D", hl.dsp.exec_cmd("$HOME/.local/bin/toggle-hyprland-dock-autohide"),
+    { description = "Dock: Toggle auto-hide" })
+hl.bind("SUPER + ALT + SHIFT + D", hl.dsp.exec_cmd("$HOME/.local/bin/toggle-hyprland-dock"),
+    { description = "Dock: Toggle visibility" })
 
 -- A standalone Super tap opens only the Quickshell search launcher.
 hl.unbind("SUPER + SUPER_L")
