@@ -10,6 +10,7 @@ Item {
     id: root
     property alias currentIndex: tabBar.currentIndex
     required property var tabButtonList
+    property bool wheelUpIncrements: false
 
     function incrementCurrentIndex() {
         tabBar.incrementCurrentIndex();
@@ -79,10 +80,14 @@ Item {
         acceptedButtons: Qt.NoButton
         cursorShape: Qt.PointingHandCursor
         onWheel: event => {
-            if (event.angleDelta.y < 0) {
-                root.incrementCurrentIndex();
-            } else {
-                root.decrementCurrentIndex();
+            const dx = event.angleDelta.x;
+            const dy = event.angleDelta.y;
+            if (Math.abs(dx) > Math.abs(dy)) { // Horizontal scroll: right = next, left = previous
+                if (dx < 0) root.incrementCurrentIndex();
+                else root.decrementCurrentIndex();
+            } else if (dy !== 0) {
+                if ((dy > 0) === root.wheelUpIncrements) root.incrementCurrentIndex();
+                else root.decrementCurrentIndex();
             }
         }
     }

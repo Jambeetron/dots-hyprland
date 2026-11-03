@@ -11,6 +11,7 @@ import Quickshell.Hyprland
 Scope { // Scope
     id: root
     property bool detach: false
+    property bool switchingDetach: false // True while moving the content between the panel and the window
     property bool pin: false
     property Component contentComponent: SidebarLeftContent {}
     property Item sidebarContent
@@ -65,18 +66,31 @@ Scope { // Scope
         sidebarLoader.item.contentParent.children = [root.sidebarContent];
     }
 
+    // Both windows stay loaded and are only shown/hidden: re-attaching is then like opening the sidebar,
+    // which keeps the keyboard focus working (destroying the windows on every toggle lost it)
     onDetachChanged: {
+        root.switchingDetach = true;
         if (root.detach) {
-            GlobalFocusGrab.removeDismissable(sidebarLoader.item) // Remove sidebar from the focus grab system
-            sidebarContent.parent = null; // Detach content from sidebar
-            sidebarLoader.active = false; // Unload sidebar
-            detachedSidebarLoader.active = true; // Load detached window
+            detachedSidebarLoader.active = true; // Created the first time, then kept
             detachedSidebarLoader.item.contentParent.children = [sidebarContent];
         } else {
-            sidebarContent.parent = null; // Detach content from window
-            detachedSidebarLoader.active = false; // Unload detached window
-            sidebarLoader.active = true; // Load sidebar
             sidebarLoader.item.contentParent.children = [sidebarContent];
+        }
+        switchingDetachTimer.restart();
+        Qt.callLater(root.focusContent);
+    }
+
+    function focusContent() {
+        if (!GlobalStates.sidebarLeftOpen) return;
+        root.sidebarContent.focusActiveItem();
+    }
+
+    Timer {
+        id: switchingDetachTimer
+        interval: 500
+        onTriggered: {
+            root.switchingDetach = false;
+            Qt.callLater(root.focusContent);
         }
     }
 
@@ -86,7 +100,7 @@ Scope { // Scope
         
         sourceComponent: PanelWindow { // Window
             id: panelWindow
-            visible: GlobalStates.sidebarLeftOpen
+            visible: GlobalStates.sidebarLeftOpen && !root.detach
             
             property bool extend: false
             property real sidebarWidth: panelWindow.extend ? Appearance.sizes.sidebarWidthExtended : Appearance.sizes.sidebarWidth
@@ -114,16 +128,32 @@ Scope { // Scope
                 item: sidebarLeftBackground
             }
 
-            onVisibleChanged: {
-                if (visible) {
+            // While pinned, clicking outside doesn't close the sidebar
+            function updateDismissable() {
+                if (visible && !root.pin) {
                     GlobalFocusGrab.addDismissable(panelWindow);
                 } else {
                     GlobalFocusGrab.removeDismissable(panelWindow);
                 }
             }
+            onVisibleChanged: updateDismissable()
+            Connections {
+                target: root
+                function onPinChanged() {
+                    panelWindow.updateDismissable();
+                }
+            }
             Connections {
                 target: GlobalFocusGrab
                 function onDismissed() {
+                    if (root.pin) return;
+                    // Right after re-attaching (e.g. on an empty workspace) Hyprland may clear the focus grab
+                    // because the closed window had the focus: keep the sidebar open
+                    if (root.switchingDetach && panelWindow.visible) {
+                        panelWindow.updateDismissable();
+                        Qt.callLater(root.focusContent);
+                        return;
+                    }
                     panelWindow.hide();
                 }
             }
@@ -178,9 +208,10 @@ Scope { // Scope
             property var contentParent: detachedSidebarBackground
             color: "transparent"
 
-            visible: GlobalStates.sidebarLeftOpen
+            visible: GlobalStates.sidebarLeftOpen && root.detach
             onVisibleChanged: {
-                if (!visible) GlobalStates.sidebarLeftOpen = false;
+                // Closed by the user (not hidden by re-attaching or closing the sidebar)
+                if (!visible && root.detach && !root.switchingDetach) GlobalStates.sidebarLeftOpen = false;
             }
             
             Rectangle {

@@ -352,6 +352,20 @@ Singleton {
                     property string engine: "auto" // Run `trans -list-engines` for available engines. auto should use google
                     property string targetLanguage: "auto" // Run `trans -list-all` for available languages
                     property string sourceLanguage: "auto"
+                    property string model: "classic" // "classic" (Google Translate) or "advanced" (Gemini API)
+                    property string voiceSpeed: "normal" // "normal", "slow" or "slower"
+                    property string voiceEngine: "xtts" // "google", "xtts" (local) or "elevenlabs" (API key in the keyring); falls back to Google
+                    property string elevenLabsVoice: "EXAVITQu4vr4xnxDXMLL" // ElevenLabs voice ID
+                    property string elevenLabsVoiceName: "Sarah"
+                    property string xttsVoices: "{}" // XTTS-v2 voice per language, JSON like {"es": "Zacharie Aimilios"}; the rest use the default voice
+                    // Google Cloud TTS (API key in the keyring): default voice by gender and quality, or one voice per language
+                    property string googleCloudGender: "female" // "female" or "male"
+                    property string googleCloudTier: "neural2" // "chirp3hd", "neural2", "wavenet" or "standard"
+                    property string googleCloudVoices: "{}" // JSON like {"es": "es-US-Neural2-B"}; the rest use gender + quality
+                }
+                property JsonObject tts: JsonObject {
+                    property string language: "auto" // Language the TTS tab reads in; voice and speed are shared with the translator
+                    property string saveFolder: "" // Last folder chosen to save recordings (MP3)
                 }
             }
 
@@ -501,7 +515,11 @@ Singleton {
                     property bool enable: false
                     property int delay: 300 // Delay before sending request. Reduces (potential) rate limits and lag.
                 }
+                property JsonObject tts: JsonObject {
+                    property bool enable: true
+                }
                 property JsonObject ai: JsonObject {
+                    property bool enable: true // Intelligence tab (also needs policies.ai on)
                     property bool textFadeIn: false
                 }
                 property JsonObject booru: JsonObject {

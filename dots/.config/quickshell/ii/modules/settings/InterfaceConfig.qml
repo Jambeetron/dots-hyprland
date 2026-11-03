@@ -479,11 +479,33 @@ ContentPage {
         }
 
         ConfigSwitch {
+            buttonIcon: "neurology"
+            text: Translation.tr('Enable Intelligence')
+            enabled: Config.options.policies.ai !== 0
+            checked: Config.options.sidebar.ai.enable
+            onCheckedChanged: {
+                Config.options.sidebar.ai.enable = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("Also needs AI allowed in General → Policies")
+            }
+        }
+
+        ConfigSwitch {
             buttonIcon: "translate"
-            text: Translation.tr('Enable translator')
+            text: Translation.tr('Enable Translator')
             checked: Config.options.sidebar.translator.enable
             onCheckedChanged: {
                 Config.options.sidebar.translator.enable = checked;
+            }
+        }
+
+        ConfigSwitch {
+            buttonIcon: "record_voice_over"
+            text: Translation.tr('Enable TTS')
+            checked: Config.options.sidebar.tts.enable
+            onCheckedChanged: {
+                Config.options.sidebar.tts.enable = checked;
             }
         }
 

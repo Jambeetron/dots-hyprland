@@ -12,13 +12,15 @@ Item {
     required property var scopeRoot
     property int sidebarPadding: 10
     anchors.fill: parent
-    property bool aiChatEnabled: Config.options.policies.ai !== 0
+    property bool aiChatEnabled: Config.options.policies.ai !== 0 && (Config.options.sidebar.ai?.enable ?? true)
     property bool translatorEnabled: Config.options.sidebar.translator.enable
     property bool animeEnabled: Config.options.policies.weeb !== 0
     property bool animeCloset: Config.options.policies.weeb === 2
+    property bool ttsEnabled: Config.options.sidebar.tts?.enable ?? true
     property var tabButtonList: [
         ...(root.aiChatEnabled ? [{"icon": "neurology", "name": Translation.tr("Intelligence")}] : []),
         ...(root.translatorEnabled ? [{"icon": "translate", "name": Translation.tr("Translator")}] : []),
+        ...(root.ttsEnabled ? [{"icon": "record_voice_over", "name": "TTS"}] : []),
         ...((root.animeEnabled && !root.animeCloset) ? [{"icon": "bookmark_heart", "name": Translation.tr("Anime")}] : [])
     ]
     property int tabCount: swipeView.count
@@ -29,11 +31,11 @@ Item {
 
     Keys.onPressed: (event) => {
         if (event.modifiers === Qt.ControlModifier) {
-            if (event.key === Qt.Key_PageDown) {
+            if (event.key === Qt.Key_PageUp) { // Ctrl+PageUp → next tab
                 swipeView.incrementCurrentIndex()
                 event.accepted = true;
             }
-            else if (event.key === Qt.Key_PageUp) {
+            else if (event.key === Qt.Key_PageDown) { // Ctrl+PageDown → previous tab
                 swipeView.decrementCurrentIndex()
                 event.accepted = true;
             }
@@ -56,6 +58,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 tabButtonList: root.tabButtonList
                 currentIndex: swipeView.currentIndex
+                wheelUpIncrements: true
             }
         }
 
@@ -72,6 +75,8 @@ Item {
                 anchors.fill: parent
                 spacing: 10
                 currentIndex: tabBar.currentIndex
+                // Don't switch tabs with ←/→ (e.g. when the text cursor is already at the start/end)
+                Component.onCompleted: contentItem.keyNavigationEnabled = false
 
                 clip: true
                 layer.enabled: true
@@ -86,7 +91,8 @@ Item {
                 contentChildren: [
                     ...(root.aiChatEnabled ? [aiChat.createObject()] : []),
                     ...(root.translatorEnabled ? [translator.createObject()] : []),
-                    ...((root.tabButtonList.length === 0 || (!root.aiChatEnabled && !root.translatorEnabled && root.animeCloset)) ? [placeholder.createObject()] : []),
+                    ...(root.ttsEnabled ? [tts.createObject()] : []),
+                    ...((root.tabButtonList.length === 0 || (!root.aiChatEnabled && !root.translatorEnabled && !root.ttsEnabled && root.animeCloset)) ? [placeholder.createObject()] : []),
                     ...(root.animeEnabled ? [anime.createObject()] : []),
                 ]
             }
@@ -99,6 +105,10 @@ Item {
         Component {
             id: translator
             Translator {}
+        }
+        Component {
+            id: tts
+            Tts {}
         }
         Component {
             id: anime

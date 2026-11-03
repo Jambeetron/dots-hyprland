@@ -147,6 +147,19 @@ Rectangle {
             Layout.leftMargin: 10
             Layout.topMargin: 10
             implicitWidth: tabBar.implicitWidth
+            WheelHandler {
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                onWheel: event => {
+                    const tabOffset = event.angleDelta.y > 0 ? -1 : event.angleDelta.y < 0 ? 1 : 0;
+                    if (tabOffset === 0) return;
+
+                    const nextTab = Math.max(0, Math.min(root.tabs.length - 1, root.selectedTab + tabOffset));
+                    if (nextTab === root.selectedTab) return;
+
+                    root.selectedTab = nextTab;
+                    Persistent.states.sidebar.bottomGroup.tab = nextTab;
+                }
+            }
             // Navigation rail buttons
             NavigationRailTabArray {
                 id: tabBar
