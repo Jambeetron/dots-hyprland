@@ -39,6 +39,21 @@ Item {
         root.showLanguageSelector = true
     }
 
+    function swapLanguages() {
+        const previousTargetLanguage = root.targetLanguage;
+        root.targetLanguage = root.sourceLanguage;
+        root.sourceLanguage = previousTargetLanguage;
+        Config.options.language.translator.targetLanguage = root.targetLanguage;
+        Config.options.language.translator.sourceLanguage = root.sourceLanguage;
+        translateTimer.restart();
+    }
+
+    Shortcut {
+        sequence: "Ctrl+Shift+S"
+        enabled: root.visible && !root.showLanguageSelector
+        onActivated: root.swapLanguages()
+    }
+
     onFocusChanged: (focus) => {
         if (focus) {
             root.inputField.forceActiveFocus()
@@ -115,11 +130,33 @@ Item {
                 id: contentColumn
                 anchors.fill: parent
 
-                LanguageSelectorButton { // Target language button
-                    id: targetLanguageButton
-                    displayText: root.targetLanguage
-                    onClicked: {
-                        root.showLanguageSelectorDialog(true);
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    LanguageSelectorButton { // Target language button
+                        id: targetLanguageButton
+                        displayText: root.targetLanguage
+                        onClicked: {
+                            root.showLanguageSelectorDialog(true);
+                        }
+                    }
+
+                    GroupButton {
+                        id: swapLanguagesButton
+                        Layout.alignment: Qt.AlignVCenter
+                        buttonRadius: Appearance.rounding.small
+                        contentItem: MaterialSymbol {
+                            anchors.centerIn: parent
+                            horizontalAlignment: Text.AlignHCenter
+                            iconSize: Appearance.font.pixelSize.larger
+                            text: "swap_vert"
+                            color: Appearance.colors.colOnLayer1
+                        }
+                        StyledToolTip {
+                            text: Translation.tr("Swap languages\nChange with Ctrl+Shift+S")
+                        }
+                        onClicked: root.swapLanguages()
                     }
                 }
 

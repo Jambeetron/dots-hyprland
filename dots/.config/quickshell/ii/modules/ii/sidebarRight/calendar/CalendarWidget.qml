@@ -29,9 +29,9 @@ Item {
         anchors.fill: parent
         onWheel: (event) => {
             if (event.angleDelta.y > 0) {
-                monthShift--;
-            } else if (event.angleDelta.y < 0) {
                 monthShift++;
+            } else if (event.angleDelta.y < 0) {
+                monthShift--;
             }
         }
     }
