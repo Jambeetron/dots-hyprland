@@ -48,6 +48,7 @@ Item {
         SecondaryTabBar {
             id: tabBar
             currentIndex: swipeView.currentIndex
+            wheelUpIncrements: true
 
             Repeater {
                 model: root.tabButtonList

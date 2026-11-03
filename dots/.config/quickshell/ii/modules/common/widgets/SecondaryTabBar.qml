@@ -7,13 +7,14 @@ import qs.modules.common.models
 TabBar {
     id: root
     property real indicatorPadding: 8
+    property bool wheelUpIncrements: false
     Layout.fillWidth: true
 
     background: Item {
         WheelHandler {
             onWheel: (event) => {
-                if (event.angleDelta.y < 0) root.incrementCurrentIndex();
-                else if (event.angleDelta.y > 0) root.decrementCurrentIndex();
+                if ((event.angleDelta.y > 0) === root.wheelUpIncrements) root.incrementCurrentIndex();
+                else if (event.angleDelta.y !== 0) root.decrementCurrentIndex();
             }
             acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         }

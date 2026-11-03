@@ -14,7 +14,7 @@ Rectangle {
     property var inputTextArea: isInput ? inputLoader.item : undefined
     readonly property string displayedText: isInput ? inputLoader.item.text : 
         root.text.length > 0 ? outputLoader.item.text : ""
-    default property alias actionButtons: actions.data
+    default property alias actionButtons: actions.groupData
     Layout.fillWidth: true
     implicitHeight: Math.max(150, inputColumn.implicitHeight)
     color: Appearance.colors.colLayer2
@@ -77,10 +77,15 @@ Rectangle {
                     font.pixelSize: Appearance.font.pixelSize.smaller
                 }
             }
-            Item { Layout.fillWidth: true }
-            ButtonGroup {
-                id: actions
-            }
         }
+    }
+
+    ButtonGroup {
+        id: actions
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: 10
+        anchors.bottomMargin: 10
+        z: 1
     }
 }
