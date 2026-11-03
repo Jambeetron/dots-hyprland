@@ -10,6 +10,7 @@ Item {
     id: root
     property alias currentIndex: tabBar.currentIndex
     required property var tabButtonList
+    property bool wheelUpIncrements: false
 
     function incrementCurrentIndex() {
         tabBar.incrementCurrentIndex();
@@ -79,7 +80,7 @@ Item {
         acceptedButtons: Qt.NoButton
         cursorShape: Qt.PointingHandCursor
         onWheel: event => {
-            if (event.angleDelta.y < 0) {
+            if ((event.angleDelta.y > 0) === root.wheelUpIncrements) {
                 root.incrementCurrentIndex();
             } else {
                 root.decrementCurrentIndex();
