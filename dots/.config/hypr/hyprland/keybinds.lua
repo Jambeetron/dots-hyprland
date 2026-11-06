@@ -15,7 +15,7 @@ hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd(qsIsAlive .. " || pkill fuzzel || fuz
 hl.bind("SUPER + SUPER_R", hl.dsp.exec_cmd(qsIsAlive .. " || pkill fuzzel || fuzzel"))
 
 -- Removed workspace number overlay on Super press
-hl.bind("SUPER + Tab", hl.dsp.exec_cmd("qs -c ii ipc call search toggle"), { description = "Shell: Toggle search" })
+hl.bind("SUPER + Tab", hl.dsp.exec_cmd("qs -c ii ipc call waffleSearch toggle"), { description = "Shell: Toggle search" })
 hl.bind("SUPER + V", hl.dsp.global("quickshell:overviewClipboardToggle"))
 hl.bind("SUPER + Period", hl.dsp.global("quickshell:overviewEmojiToggle"))
 hl.bind("SUPER + A", hl.dsp.global("quickshell:sidebarLeftToggle"), { description = "Shell: Toggle left sidebar" })

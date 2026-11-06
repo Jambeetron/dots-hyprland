@@ -84,7 +84,7 @@ Scope {
     }
 
     IpcHandler {
-        target: "search"
+        target: "waffleSearch"
 
         function toggle() {
             if (GlobalStates.overviewOpen) {

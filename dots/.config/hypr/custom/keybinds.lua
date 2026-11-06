@@ -12,12 +12,33 @@ hl.bind("SUPER + ALT + D", hl.dsp.exec_cmd("$HOME/.local/bin/toggle-hyprland-doc
 hl.bind("SUPER + ALT + SHIFT + D", hl.dsp.exec_cmd("$HOME/.local/bin/toggle-hyprland-dock"),
     { description = "Dock: Toggle visibility" })
 
--- A standalone Super tap opens only the Quickshell search launcher.
+-- Open the Waffle search on a standalone Super tap, but not after a chord.
 hl.unbind("SUPER + SUPER_L")
 hl.unbind("SUPER + SUPER_R")
-hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("qs -c $qsConfig ipc call search toggle"),
-    { description = "Shell: Toggle search" })
-hl.bind("SUPER + SUPER_R", hl.dsp.exec_cmd("qs -c $qsConfig ipc call search toggle"))
+local superTapCandidate = false
+local superTapFirstEvent = false
+for _, key in ipairs({ "SUPER_L", "SUPER_R" }) do
+    hl.bind(key, function()
+        superTapCandidate = true
+        superTapFirstEvent = true
+    end,
+        { ignore_mods = true, transparent = true })
+    hl.bind(key, function()
+        if superTapCandidate then
+            hl.dispatch(hl.dsp.exec_cmd("qs -c $qsConfig ipc call waffleSearch toggle"))
+        end
+        superTapCandidate = false
+    end, { release = true, ignore_mods = true, transparent = true })
+end
+hl.bind("SUPER + catchall", function()
+    if superTapCandidate then
+        if superTapFirstEvent then
+            superTapFirstEvent = false
+        else
+            superTapCandidate = false
+        end
+    end
+end, { non_consuming = true, transparent = true })
 
 -- Keep the terminal launcher on Super+T only.
 hl.unbind("SUPER + T")
