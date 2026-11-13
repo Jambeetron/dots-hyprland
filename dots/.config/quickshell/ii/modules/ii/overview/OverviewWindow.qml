@@ -43,6 +43,8 @@ Item { // Window
     property var targetWindowHeight: windowData?.size[1] * scale * heightRatio
     property bool hovered: false
     property bool pressed: false
+    // Seleccionada con click derecho (para moverla a otro workspace)
+    property bool selected: GlobalStates.selectedWindows.indexOf(windowData?.address ?? "") !== -1
 
     property bool centerIcons: Config.options.overview.centerIcons
     property real iconGapRatio: 0.06
@@ -103,11 +105,12 @@ Item { // Window
             topRightRadius: root.topRightRadius
             bottomRightRadius: root.bottomRightRadius
             bottomLeftRadius: root.bottomLeftRadius
-            color: pressed ? ColorUtils.transparentize(Appearance.colors.colLayer2Active, 0.5) : 
-                hovered ? ColorUtils.transparentize(Appearance.colors.colLayer2Hover, 0.7) : 
+            color: root.selected ? ColorUtils.transparentize(Appearance.colors.colPrimary, 0.55) :
+                pressed ? ColorUtils.transparentize(Appearance.colors.colLayer2Active, 0.5) :
+                hovered ? ColorUtils.transparentize(Appearance.colors.colLayer2Hover, 0.7) :
                 ColorUtils.transparentize(Appearance.colors.colLayer2)
-            border.color : ColorUtils.transparentize(Appearance.m3colors.m3outline, 0.88)
-            border.width : 1
+            border.color : root.selected ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.m3colors.m3outline, 0.88)
+            border.width : root.selected ? 2 : 1
         }
 
         StyledImage {

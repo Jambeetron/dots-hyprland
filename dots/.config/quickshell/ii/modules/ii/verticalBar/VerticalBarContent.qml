@@ -121,6 +121,7 @@ Item { // Bar content region
                     onPressed: event => {
                         if (event.button === Qt.RightButton) {
                             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
+                            GlobalStates.searchOpen = GlobalStates.overviewOpen;
                         }
                     }
                 }
