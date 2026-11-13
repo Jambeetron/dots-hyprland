@@ -77,7 +77,7 @@ Scope {
     }
 
     IpcHandler {
-        target: "search"
+        target: "taskView"
 
         function toggle() {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
@@ -101,10 +101,28 @@ Scope {
 
     GlobalShortcut {
         name: "overviewWorkspacesToggle"
-        description: "Toggles overview on press"
+        description: "Toggles search on press"
 
         onPressed: {
             GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
+        }
+    }
+
+    IpcHandler {
+        target: "overview"
+
+        function toggle() {
+            GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
+        }
+        function close() {
+            GlobalStates.overviewOpen = false;
+        }
+        function open() {
+            GlobalStates.overviewOpen = true;
+        }
+        function toggleWithSearch() {
+            GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
+            GlobalStates.searchOpen = GlobalStates.overviewOpen;
         }
     }
 }

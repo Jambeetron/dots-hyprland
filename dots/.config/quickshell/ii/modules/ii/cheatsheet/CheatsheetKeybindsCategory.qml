@@ -115,6 +115,17 @@ Column {
         return bind.description.indexOf(":") === -1;
     }
 
+    function hasFirstPosition(bind) {
+        return (root.categoryName === "Shell" && bind.description === "Shell: Toggle search")
+            || (root.categoryName === "App" && bind.description === "App: Terminal");
+    }
+
+    function prioritizeBinds(binds) {
+        const first = binds.filter(bind => root.hasFirstPosition(bind));
+        const rest = binds.filter(bind => !root.hasFirstPosition(bind));
+        return first.concat(rest);
+    }
+
     function containsNonFirstRepetitive(bind) {
         const key = bind.key;
         if (key.includes("mouse") || key.includes("page")) return false;
@@ -153,9 +164,9 @@ Column {
             id: repeater
             model: {
                 if (!root.isCategorized) {
-                    return HyprlandKeybinds.keybinds.filter(bind => root.hasDescription(bind) && root.isUncategorized(bind) && !root.containsNonFirstRepetitive(bind));
+                    return root.prioritizeBinds(HyprlandKeybinds.keybinds.filter(bind => root.hasDescription(bind) && root.isUncategorized(bind) && !root.containsNonFirstRepetitive(bind)));
                 }
-                return HyprlandKeybinds.keybinds.filter(bind => root.hasDescription(bind) && root.isCategory(bind, root.categoryName) && !root.containsNonFirstRepetitive(bind));
+                return root.prioritizeBinds(HyprlandKeybinds.keybinds.filter(bind => root.hasDescription(bind) && root.isCategory(bind, root.categoryName) && !root.containsNonFirstRepetitive(bind)));
             }
             delegate: BindLine {
                 required property var modelData

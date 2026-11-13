@@ -87,6 +87,10 @@ Scope {
         target: "search"
 
         function toggle() {
+            if (GlobalStates.overviewOpen) {
+                GlobalStates.overviewOpen = false;
+                return;
+            }
             GlobalStates.searchOpen = !GlobalStates.searchOpen;
         }
         function close() {
@@ -97,6 +101,19 @@ Scope {
         }
         function toggleReleaseInterrupt() {
             GlobalStates.superReleaseMightTrigger = false;
+        }
+        function armSuperTap() {
+            GlobalStates.superReleaseMightTrigger = true;
+        }
+        function superTap() {
+            if (!GlobalStates.superReleaseMightTrigger) {
+                GlobalStates.superReleaseMightTrigger = true;
+                return;
+            }
+            GlobalStates.searchOpen = !GlobalStates.searchOpen;
+        }
+        function clipboardToggle() {
+            root.toggleClipboard();
         }
     }
 
