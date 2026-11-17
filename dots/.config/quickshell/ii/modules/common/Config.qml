@@ -322,6 +322,11 @@ Singleton {
                 property string code: "0;P;d;1;0l;10;0o;2;1b;0"
             }
 
+            property JsonObject dashboard: JsonObject {
+                property list<string> pinnedApps: []
+                property string displayMode: "fullscreen" // "fullscreen" | "window"
+            }
+
             property JsonObject dock: JsonObject {
                 property bool enable: false
                 property bool monochromeIcons: true

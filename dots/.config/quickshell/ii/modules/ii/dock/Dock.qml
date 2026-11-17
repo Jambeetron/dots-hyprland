@@ -143,8 +143,7 @@ Scope { // Scope
                                 id: dashboardButton
                                 Layout.fillHeight: true
                                 onClicked: {
-                                    GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
-                                    GlobalStates.searchOpen = GlobalStates.overviewOpen;
+                                    GlobalStates.dashboardOpen = !GlobalStates.dashboardOpen;
                                 }
                                 topInset: Appearance.sizes.hyprlandGapsOut + dockRow.padding
                                 bottomInset: Appearance.sizes.hyprlandGapsOut + dockRow.padding
