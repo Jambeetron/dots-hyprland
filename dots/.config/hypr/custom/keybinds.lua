@@ -5,6 +5,7 @@
 require("custom.wsextra")
 
 hl.bind("SUPER + U", hl.dsp.exec_cmd("wayscriber --daemon-toggle"), { description = "App: Wayscriber" })
+hl.bind("SUPER + B", hl.dsp.global("quickshell:dashboardToggle"), { description = "Shell: Toggle dashboard" })
 
 -- Super-tap-opens-search is now handled entirely by the official fix in
 -- hyprland/keybinds.lua ("SUPER + SUPER_L/R" release via exec_cmd, which
