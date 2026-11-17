@@ -139,6 +139,37 @@ ContentPage {
                 Config.options.dock.monochromeIcons = checked;
             }
         }
+        ConfigSwitch {
+            buttonIcon: "arrow_upward"
+            text: Translation.tr("Raise icon on hover")
+            checked: Config.options.dock.raiseOnHover
+            onCheckedChanged: {
+                Config.options.dock.raiseOnHover = checked;
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            ConfigSpinBox {
+                icon: "height"
+                text: Translation.tr("Size")
+                value: Config.options.dock.height
+                from: 40
+                to: 150
+                stepSize: 5
+                onValueChanged: {
+                    Config.options.dock.height = value;
+                }
+            }
+            Item { Layout.fillWidth: true }
+            RippleButtonWithIcon {
+                materialIcon: "restart_alt"
+                mainText: Translation.tr("Reset")
+                onClicked: {
+                    Config.options.dock.height = 60;
+                }
+            }
+        }
     }
 
     ContentSection {

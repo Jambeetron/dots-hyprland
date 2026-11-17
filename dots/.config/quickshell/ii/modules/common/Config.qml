@@ -329,9 +329,11 @@ Singleton {
                 property real hoverRegionHeight: 2
                 property bool pinnedOnStartup: false
                 property bool hoverToReveal: true // When false, only reveals on empty workspace
+                property bool raiseOnHover: true // Lift an icon when the mouse hovers over it
                 property list<string> pinnedApps: [ // IDs of pinned entries
                     "org.kde.dolphin", "kitty",]
                 property list<string> ignoredAppRegexes: []
+                property list<string> ungroupedApps: [] // Lowercase app IDs shown one button per window
             }
 
             property JsonObject interactions: JsonObject {

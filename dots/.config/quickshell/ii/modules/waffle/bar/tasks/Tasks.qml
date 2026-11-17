@@ -34,7 +34,7 @@ MouseArea {
         interactive: false
         // TODO: Include only apps (and windows) in current workspace only | wait, does that even make sense in a Hyprland workflow?
         model: ScriptModel {
-            objectProp: "appId"
+            objectProp: "key"
             values: TaskbarApps.apps.filter(app => app.appId !== "SEPARATOR")
         }
         delegate: TaskAppButton {
