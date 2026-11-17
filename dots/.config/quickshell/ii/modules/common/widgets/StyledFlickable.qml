@@ -12,6 +12,8 @@ Flickable {
     property real mouseScrollDeltaThreshold: Config?.options.interactions.scrolling.mouseScrollDeltaThreshold ?? 120
     // Accumulated scroll destination so wheel deltas stack while animating
     property real scrollTargetY: 0
+    // Turn off to make contentY changes jump (e.g. following a held key).
+    property bool animateScroll: true
 
     ScrollBar.vertical: StyledScrollBar {}
 
@@ -36,6 +38,7 @@ Flickable {
     }
 
     Behavior on contentY {
+        enabled: root.animateScroll
         NumberAnimation {
             id: scrollAnim
             duration: Appearance.animation.scroll.duration

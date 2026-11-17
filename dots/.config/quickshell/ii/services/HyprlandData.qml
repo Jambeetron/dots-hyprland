@@ -99,7 +99,16 @@ Singleton {
 
         function onRawEvent(event) {
             // console.log("Hyprland raw event:", event.name);
-            if (["openlayer", "closelayer", "screencast"].includes(event.name)) return;
+            // Layer surfaces (bar, dock...) don't touch windows/workspaces,
+            // but they DO change each monitor's reserved area (exclusive
+            // zones). Refresh just the monitors for them -- otherwise, right
+            // after boot, "reserved" stays at whatever it was before the bar
+            // and dock mapped, until some unrelated window event happens.
+            if (["openlayer", "closelayer"].includes(event.name)) {
+                updateMonitors();
+                return;
+            }
+            if (event.name === "screencast") return;
             updateAll()
         }
     }

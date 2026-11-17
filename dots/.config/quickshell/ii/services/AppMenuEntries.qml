@@ -6,7 +6,7 @@ import QtQuick
 import Quickshell
 
 /**
- * Builds the entry lists for AppContextMenu (dock right-click).
+ * Builds the entry lists for AppContextMenu (dock + dashboard right-click).
  */
 Singleton {
     id: root
@@ -29,6 +29,66 @@ Singleton {
             });
         }
         return result;
+    }
+
+    function dashboardEntries(entry) {
+        const close = () => GlobalStates.dashboardOpen = false;
+        const result = root.desktopActions(entry, close);
+        if (result.length > 0)
+            result.push({ type: "separator" });
+        result.push({
+            type: "check",
+            text: Translation.tr("Show in Favorites"),
+            checked: DashboardApps.isPinned(entry.id),
+            action: () => DashboardApps.togglePin(entry.id)
+        });
+        result.push({
+            type: "check",
+            text: Translation.tr("Pin to Task Manager"),
+            checked: TaskbarApps.isPinned(entry.id),
+            action: () => TaskbarApps.togglePin(entry.id)
+        });
+        result.push({ type: "separator" });
+        result.push({
+            type: "action",
+            text: Translation.tr("Edit Application..."),
+            icon: "kmenuedit",
+            action: () => {
+                close();
+                Quickshell.execDetached(["kmenuedit", `${entry.id}.desktop`]);
+            }
+        });
+        result.push({
+            type: "action",
+            text: Translation.tr("Uninstall or Manage Add-ons..."),
+            icon: "plasmadiscover",
+            action: () => {
+                close();
+                Quickshell.execDetached(["plasma-discover", "--application", `appstream://${entry.id}`]);
+            }
+        });
+        return result;
+    }
+
+    // Dashboard background right-click: pins the shown apps, or unpins them when all already are.
+    function dashboardBackgroundEntries(apps) {
+        const ids = apps.map(app => app.id);
+        const allInFavorites = ids.every(id => DashboardApps.isPinned(id));
+        const allInTaskbar = ids.every(id => TaskbarApps.isPinned(id));
+        return [
+            {
+                type: "check",
+                text: Translation.tr("Show all in Favorites"),
+                checked: allInFavorites,
+                action: () => allInFavorites ? DashboardApps.unpinAll(ids) : DashboardApps.pinAll(ids)
+            },
+            {
+                type: "check",
+                text: Translation.tr("Pin all to Task Manager"),
+                checked: allInTaskbar,
+                action: () => allInTaskbar ? TaskbarApps.unpinAll(ids) : TaskbarApps.pinAll(ids)
+            }
+        ];
     }
 
     function dockEntries(appId) {

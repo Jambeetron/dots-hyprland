@@ -129,8 +129,10 @@ Column {
     function containsNonFirstRepetitive(bind) {
         const key = bind.key;
         if (key.includes("mouse") || key.includes("page")) return false;
-        // Contains non-1 number
-        if (/\d/.test(key) && !key.includes("1")) return true;
+        // A bare digit key other than 1 (workspace-style 2..0). Only bare
+        // digits: F4, F12, XF86... merely *contain* digits and are not
+        // part of a numbered series.
+        if (/^\d$/.test(key) && key !== "1") return true;
         // Contains non-left direction
         if (/^(right|up|down)\b/i.test(key)) return true;
         return false;
@@ -138,12 +140,12 @@ Column {
 
     function containsFirstRepetitive(bind) {
         const key = bind.key;
-        return key.includes("1") || /left/i.test(key);
+        return key === "1" || /left/i.test(key);
     }
 
     function transformKey(key) {
         const replaced = root.keySubstitutions[key] || key;
-        const denumbered = replaced.replace("1", "<Number>");
+        const denumbered = key === "1" ? "<Number>" : replaced;
         const dedirectioned = denumbered.replace("Left", "<Direction>");
         return dedirectioned;
     }

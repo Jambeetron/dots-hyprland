@@ -173,6 +173,22 @@ ContentPage {
     }
 
     ContentSection {
+        icon: "apps"
+        title: Translation.tr("Application Launcher")
+
+        ConfigSelectionArray {
+            currentValue: Config.options.dashboard.displayMode
+            onSelected: newValue => {
+                Config.options.dashboard.displayMode = newValue;
+            }
+            options: [
+                { displayName: Translation.tr("Full screen"), icon: "fullscreen", value: "fullscreen" },
+                { displayName: Translation.tr("Window"), icon: "web_asset", value: "window" },
+            ]
+        }
+    }
+
+    ContentSection {
         icon: "lock"
         title: Translation.tr("Lock screen")
 

@@ -757,5 +757,6 @@
   "Ctrl+S to toggle": "Ctrl+S para alternar",
   "Clear clipboard history (keeps starred) · Ctrl+Shift+Del": "Limpiar historial del portapapeles (conserva destacados) · Ctrl+Shift+Supr",
   "Clear clipboard history · Ctrl+Shift+Del": "Limpiar historial del portapapeles · Ctrl+Shift+Supr",
-  "Couldn't generate QR code (content too long?)": "No se pudo generar el código QR (¿contenido demasiado largo?)"
+  "Couldn't generate QR code (content too long?)": "No se pudo generar el código QR (¿contenido demasiado largo?)",
+  "%1 actions": "%1 acciones"
 }

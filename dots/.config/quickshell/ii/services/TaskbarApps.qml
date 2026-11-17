@@ -74,6 +74,18 @@ Singleton {
         }
     }
 
+    // Appends the missing ones in a single write, keeping the existing order.
+    function pinAll(appIds) {
+        const missing = appIds.filter(id => !root.isPinned(id));
+        if (missing.length > 0)
+            Config.options.dock.pinnedApps = Config.options.dock.pinnedApps.concat(missing);
+    }
+
+    function unpinAll(appIds) {
+        const lower = new Set(appIds.map(id => id.toLowerCase()));
+        Config.options.dock.pinnedApps = Config.options.dock.pinnedApps.filter(id => !lower.has(id.toLowerCase()));
+    }
+
     // "Allow this program to be grouped": grouped by default; apps listed in
     // dock.ungroupedApps get one dock button per open window instead.
     function isGrouped(appId) {

@@ -623,5 +623,6 @@
   "Ctrl+S to toggle": "Ctrl+S to toggle",
   "Clear clipboard history (keeps starred) · Ctrl+Shift+Del": "Clear clipboard history (keeps starred) · Ctrl+Shift+Del",
   "Clear clipboard history · Ctrl+Shift+Del": "Clear clipboard history · Ctrl+Shift+Del",
-  "Couldn't generate QR code (content too long?)": "Couldn't generate QR code (content too long?)"
+  "Couldn't generate QR code (content too long?)": "Couldn't generate QR code (content too long?)",
+  "%1 actions": "%1 actions"
 }
