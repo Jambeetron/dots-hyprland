@@ -39,9 +39,12 @@ Scope { // Scope
 
             implicitWidth: dockBackground.implicitWidth
             WlrLayershell.namespace: "quickshell:dock"
+            // Normally the dock never takes the keyboard; while its app
+            // options menu is open it does, so arrows/Enter/Esc drive it.
+            WlrLayershell.keyboardFocus: dockApps.menuOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
             color: "transparent"
 
-            implicitHeight: (Config.options?.dock.height ?? 70) + Appearance.sizes.elevationMargin + Appearance.sizes.hyprlandGapsOut
+            implicitHeight: (Config.options?.dock.height ?? 60) + Appearance.sizes.elevationMargin + Appearance.sizes.hyprlandGapsOut
 
             mask: Region {
                 item: dockMouseArea
@@ -102,11 +105,12 @@ Scope { // Scope
                             property real padding: 5
 
                             VerticalButtonGroup {
+                                id: pinGroup
                                 Layout.topMargin: Appearance.sizes.hyprlandGapsOut // why does this work
                                 GroupButton {
                                     // Pin button
-                                    baseWidth: 35
-                                    baseHeight: 35
+                                    baseWidth: (Config.options?.dock.height ?? 60) - 25
+                                    baseHeight: (Config.options?.dock.height ?? 60) - 25
                                     clickedWidth: baseWidth
                                     clickedHeight: baseHeight + 20
                                     buttonRadius: Appearance.rounding.normal
@@ -120,13 +124,23 @@ Scope { // Scope
                                     }
                                 }
                             }
-                            DockSeparator {}
+                            DockSeparator { id: leftSeparator }
                             DockApps {
                                 id: dockApps
                                 buttonPadding: dockRow.padding
+                                // Screen width minus everything else in the
+                                // dock (and a gap to each screen edge).
+                                maxWidth: Math.max(0, dockRoot.width
+                                    - Appearance.sizes.elevationMargin * 2   // hover region
+                                    - 5 * 2                                  // dockBackground padding
+                                    - Appearance.sizes.hyprlandGapsOut * 2   // gap to screen edges
+                                    - pinGroup.implicitWidth - leftSeparator.implicitWidth
+                                    - rightSeparator.implicitWidth - dashboardButton.implicitWidth
+                                    - dockRow.spacing * 4)
                             }
-                            DockSeparator {}
+                            DockSeparator { id: rightSeparator }
                             DockButton {
+                                id: dashboardButton
                                 Layout.fillHeight: true
                                 onClicked: {
                                     GlobalStates.overviewOpen = !GlobalStates.overviewOpen;

@@ -9,5 +9,5 @@ RippleButton {
     implicitWidth: implicitHeight - topInset - bottomInset
     buttonRadius: Appearance.rounding.normal
 
-    background.implicitHeight: 50
+    background.implicitHeight: (Config.options?.dock.height ?? 60) - 10
 }
