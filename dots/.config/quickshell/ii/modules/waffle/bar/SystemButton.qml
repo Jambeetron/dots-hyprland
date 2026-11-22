@@ -31,7 +31,9 @@ BarButton {
                 id: internetHoverArea
                 iconItem: FluentIcon {
                     anchors.verticalCenter: parent.verticalCenter
-                    icon: "wifi-1"
+                    // Dimmed full-signal backdrop under the strength bars; only for wifi, as
+                    // it would show behind the ethernet (or off/warning) icon
+                    icon: /^wifi-[1-4]$/.test(WIcons.internetIcon) ? "wifi-1" : ""
                     color: Looks.colors.inactiveIcon
 
                     FluentIcon {
@@ -45,7 +47,8 @@ BarButton {
                 id: volumeHoverArea
                 iconItem: FluentIcon {
                     anchors.verticalCenter: parent.verticalCenter
-                    icon: "speaker"
+                    // Same dimmed backdrop as wifi, but not behind the mute icon
+                    icon: WIcons.volumeIcon === "speaker-mute" ? "" : "speaker"
                     color: Looks.colors.inactiveIcon
                     
                     FluentIcon {

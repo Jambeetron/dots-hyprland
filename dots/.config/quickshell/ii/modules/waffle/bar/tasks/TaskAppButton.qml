@@ -32,13 +32,56 @@ AppButton {
     signal hoverPreviewRequested()
     signal hoverPreviewDismissed()
 
+    // ---- Drag-to-reorder (state lives in Tasks.qml)
+    property Item tasksRoot: null
+    property int listIndex: -1
+    readonly property bool anyDragActive: tasksRoot !== null && tasksRoot.draggingKey !== ""
+    readonly property bool isDragSource: anyDragActive && tasksRoot.draggingKey === appEntry.key
+    dragEnabled: tasksRoot !== null
+
+    // The dragged icon is drawn by Tasks' drag ghost; neighbors slide aside.
+    opacity: isDragSource ? 0 : 1
+    z: isDragSource ? 10 : 0
+    readonly property real dragShift: {
+        if (!anyDragActive || isDragSource)
+            return 0;
+        const t = tasksRoot;
+        const i = listIndex;
+        if (i < t.dragSectionStart || i > t.dragSectionEnd)
+            return 0;
+        if (t.dragFromIndex < t.dragToIndex && i > t.dragFromIndex && i <= t.dragToIndex)
+            return -t.dragSlotWidth;
+        if (t.dragFromIndex > t.dragToIndex && i >= t.dragToIndex && i < t.dragFromIndex)
+            return t.dragSlotWidth;
+        return 0;
+    }
+    transform: Translate {
+        x: root.dragShift
+        Behavior on x {
+            enabled: root.anyDragActive && !root.tasksRoot.dropping
+            NumberAnimation {
+                duration: 150
+                easing.type: Easing.OutCubic
+            }
+        }
+    }
+
+    onDragStarted: (pressX, pressY) => {
+        root.hoverTimer.stop();
+        root.hoverPreviewDismissed();
+        tasksRoot.beginDrag(root.appEntry, root.listIndex, root, pressX, pressY);
+    }
+    onDragMoved: (x, y) => tasksRoot.trackDragCursor(root, x, y)
+    onDragFinished: commit => tasksRoot.endDrag(commit)
+
     multiple: appEntry.toplevels.length > 1
     checked: active
     iconName: AppSearch.guessIcon(appEntry.appId)
     tryCustomIcon: false
-    
+
     onHoverTimedOut: {
-        root.hoverPreviewRequested()
+        if (!root.anyDragActive)
+            root.hoverPreviewRequested()
     }
 
     onClicked: {

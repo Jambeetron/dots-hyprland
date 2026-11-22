@@ -40,6 +40,13 @@ Rectangle {
         id: appsRow
         anchors.left: undefined
         anchors.horizontalCenter: parent.horizontalCenter
+        // Centered while it fits; when the centered spot would overlap a side
+        // row, slide just enough to clear it (uses the space on both sides).
+        readonly property real sideMargin: 8
+        readonly property real leftEdge: (bloatRow.visible ? bloatRow.width : 0) + sideMargin
+        readonly property real rightEdge: root.width - systemRow.width - sideMargin
+        readonly property real centeredX: (root.width - width) / 2
+        anchors.horizontalCenterOffset: Math.min(Math.max(0, leftEdge - centeredX), rightEdge - width - centeredX)
 
         states: State {
             name: "left"
@@ -55,10 +62,18 @@ Rectangle {
             animations: Looks.transition.anchor.createObject(this)
         }
 
-        StartButton {}
-        SearchButton {}
-        TaskViewButton {}
-        Tasks {}
+        StartButton { id: startButton }
+        SearchButton { id: searchButton }
+        TaskViewButton { id: taskViewButton }
+        Tasks {
+            // Room left for the app list: the whole gap between the side rows
+            // (appsRow slides off-center when needed, see horizontalCenterOffset).
+            readonly property real fixedButtonsWidth: startButton.width + searchButton.width + taskViewButton.width
+            readonly property real rowRoom: Config.options.waffles.bar.leftAlignApps
+                ? root.width - systemRow.width - appsRow.sideMargin
+                : appsRow.rightEdge - appsRow.leftEdge
+            maxWidth: Math.max(0, rowRoom - fixedButtonsWidth)
+        }
     }
 
     BarGroupRow {
