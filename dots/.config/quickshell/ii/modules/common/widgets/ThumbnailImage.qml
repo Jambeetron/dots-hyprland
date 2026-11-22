@@ -17,8 +17,10 @@ StyledImage {
     property string thumbnailSizeName: Images.thumbnailSizeNameForDimensions(sourceSize.width, sourceSize.height)
     property string thumbnailPath: {
         if (sourcePath.length == 0) return;
-        const resolvedUrlWithoutFileProtocol = FileUtils.trimFileProtocol(`${Qt.resolvedUrl(sourcePath)}`);
-        const encodedUrlWithoutFileProtocol = resolvedUrlWithoutFileProtocol.split("/").map(part => encodeURIComponent(part)).join("/");
+        // Must escape exactly like GLib, as the cache file name is the md5 of the URI.
+        // Don't use Qt.resolvedUrl here, it alters names containing "%".
+        const encodedUrlWithoutFileProtocol = encodeURIComponent(FileUtils.trimFileProtocol(sourcePath))
+            .replace(/%(2F|24|26|2B|2C|3A|3D|40)/g, match => decodeURIComponent(match));
         const md5Hash = Qt.md5(`file://${encodedUrlWithoutFileProtocol}`);
         return `${Directories.genericCache}/thumbnails/${thumbnailSizeName}/${md5Hash}.png`;
     }
@@ -43,7 +45,8 @@ StyledImage {
         command: {
             const maxSize = Images.thumbnailSizes[root.thumbnailSizeName];
             return ["bash", "-c", 
-                `[ -f '${FileUtils.trimFileProtocol(root.thumbnailPath)}' ] && exit 0 || { magick '${root.sourcePath}' -resize ${maxSize}x${maxSize} '${FileUtils.trimFileProtocol(root.thumbnailPath)}' && exit 1; }`
+                '[ -f "$1" ] && exit 0 || { magick "$2" -resize "$3" "$1" && exit 1; }',
+                "bash", FileUtils.trimFileProtocol(root.thumbnailPath), root.sourcePath, `${maxSize}x${maxSize}`
             ]
         }
         onExited: (exitCode, exitStatus) => {

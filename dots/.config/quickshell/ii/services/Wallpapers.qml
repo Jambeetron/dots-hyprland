@@ -22,8 +22,8 @@ Singleton {
     property url defaultFolder: Qt.resolvedUrl(`${Directories.pictures}/Wallpapers`)
     property alias folderModel: folderModel // Expose for direct binding when needed
     property string searchQuery: ""
-    readonly property list<string> extensions: [ // TODO: add videos
-        "jpg", "jpeg", "png", "webp", "avif", "bmp", "svg"
+    readonly property list<string> extensions: [
+        "jpg", "jpeg", "png", "webp", "avif", "bmp", "svg", ...Images.validVideoExtensions
     ]
     property list<string> wallpapers: [] // List of absolute file paths (without file://)
     readonly property bool thumbnailGenerationRunning: thumbgenProc.running
@@ -68,11 +68,32 @@ Singleton {
     }
 
     function randomFromCurrentFolder(darkMode = Appearance.m3colors.darkmode) {
-        if (folderModel.count === 0) return;
-        const randomIndex = Math.floor(Math.random() * folderModel.count);
-        const filePath = folderModel.get(randomIndex, "filePath");
-        print("Randomly selected wallpaper:", filePath);
-        root.select(filePath, darkMode);
+        if (randomProc.running) return;
+        randomProc.darkMode = darkMode;
+        randomProc.searchTerms = root.searchQuery.toLowerCase().split(" ").filter(term => term.length > 0);
+        // The folder url keeps characters like % and # encoded
+        const directory = decodeURIComponent(root.effectiveDirectory);
+        // -L follows symlinks like the folder model does, hidden entries are skipped
+        randomProc.exec(["find", "-L", directory, "-mindepth", "1", "-name", ".*", "-prune", "-o", "-type", "f", "-print0"]);
+    }
+
+    Process {
+        id: randomProc
+        property bool darkMode: false
+        property list<string> searchTerms: []
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const candidates = text.split("\0").filter(path => {
+                    const name = path.split("/").pop();
+                    const lowerName = name.toLowerCase();
+                    // Video extensions are case sensitive in switchwall.sh
+                    const supported = Images.isValidVideoByName(name) || root.extensions.some(ext => !Images.validVideoExtensions.includes(ext) && lowerName.endsWith(`.${ext}`));
+                    return supported && randomProc.searchTerms.every(term => lowerName.includes(term));
+                });
+                if (candidates.length === 0) return;
+                root.apply(candidates[Math.floor(Math.random() * candidates.length)], randomProc.darkMode);
+            }
+        }
     }
 
     Process {
@@ -83,7 +104,8 @@ Singleton {
             if (/^\/*$/.test(validateDirProc.nicePath)) validateDirProc.nicePath = "/";
             validateDirProc.exec([
                 "bash", "-c",
-                `if [ -d "${validateDirProc.nicePath}" ]; then echo dir; elif [ -f "${validateDirProc.nicePath}" ]; then echo file; else echo invalid; fi`
+                'if [ -d "$1" ]; then echo dir; elif [ -f "$1" ]; then echo file; else echo invalid; fi',
+                "bash", validateDirProc.nicePath // Passed as an argument so the shell never evaluates it
             ])
         }
         stdout: StdioCollector {
@@ -139,7 +161,8 @@ Singleton {
         thumbgenProc.running = false
         thumbgenProc.command = [
             "bash", "-c",
-            `${thumbgenScriptPath} --size ${size} --machine_progress -d ${FileUtils.trimFileProtocol(root.directory)} || ${generateThumbnailsMagickScriptPath} --size ${size} -d ${FileUtils.trimFileProtocol(root.directory)}`,
+            '"$1" --size "$3" --machine_progress -d "$4" || "$2" --size "$3" -d "$4"',
+            "bash", thumbgenScriptPath, generateThumbnailsMagickScriptPath, size, FileUtils.trimFileProtocol(root.directory)
         ]
         // console.log("[Wallpapers] Updating thumbnails with command ", thumbgenProc.command.join(" "))
         root.thumbnailGenerationProgress = 0

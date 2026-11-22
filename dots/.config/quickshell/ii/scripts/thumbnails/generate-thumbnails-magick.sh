@@ -29,15 +29,16 @@ md5() {
 }
 
 urlencode() {
-    # Percent-encode a string for use in a URI, but do not encode slashes
+    # Percent-encode a path exactly like GLib does for file URIs
+    local LC_ALL=C # Iterate over bytes rather than characters
     local str="$1"
     local encoded=""
     local c
     for ((i=0; i<${#str}; i++)); do
         c="${str:$i:1}"
         case "$c" in
-            [a-zA-Z0-9.~_-]|/|'('|')'|'*') encoded+="$c" ;;
-            *) printf -v hex '%%%02X' "'${c}'"; encoded+="$hex" ;;
+            [a-zA-Z0-9.~_/-]|['!$&()*+,:=@']|"'") encoded+="$c" ;;
+            *) printf -v hex '%d' "'${c}"; printf -v hex '%%%02X' "$((hex & 255))"; encoded+="$hex" ;;
         esac
     done
     echo "$encoded"

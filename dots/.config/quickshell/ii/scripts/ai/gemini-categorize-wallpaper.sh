@@ -30,6 +30,7 @@ B64DATA="$(base64 $B64FLAGS $RESIZED_IMG_PATH)"
 # echo $B64DATA
 
 # Prepare request data
+PROMPT_JSON="$(jq -n --arg text "$PROMPT" '$text')"
 payload='{
     "contents": [{
         "parts":[
@@ -39,7 +40,7 @@ payload='{
                 "data": "'"$B64DATA"'"
                 }
             },
-            {"text": "'"$PROMPT"'"}
+            {"text": '"$PROMPT_JSON"'}
         ]
     }],
     "generationConfig": {

@@ -25,6 +25,8 @@ MouseArea {
     Connections {
         target: Wallpapers
         function onDirectoryChanged() {
+            grid.currentIndex = -1;
+            filterField.forceActiveFocus(); // So the arrows work right away, also after editing the address
             root.updateThumbnails();
         }
     }
@@ -89,6 +91,8 @@ MouseArea {
         } else if (event.key === Qt.Key_Backspace) {
             if (filterField.text.length > 0) {
                 filterField.text = filterField.text.substring(0, filterField.text.length - 1);
+            } else if (!event.isAutoRepeat) {
+                Wallpapers.navigateBack();
             }
             filterField.forceActiveFocus();
             event.accepted = true;
@@ -287,7 +291,8 @@ MouseArea {
 
                         readonly property int columns: root.columns
                         readonly property int rows: Math.max(1, Math.ceil(count / columns))
-                        property int currentIndex: 0
+                        property int currentIndex: -1 // -1 until something gets selected
+                        property point pointerPosition
 
                         anchors.fill: parent
                         cellWidth: width / root.columns
@@ -304,29 +309,43 @@ MouseArea {
                         }
 
                         function moveSelection(delta) {
+                            if (grid.model.count === 0) return;
+                            if (currentIndex < 0) {
+                                currentIndex = 0;
+                                positionViewAtIndex(0, GridView.Contain);
+                                return;
+                            }
                             currentIndex = Math.max(0, Math.min(grid.model.count - 1, currentIndex + delta));
                             positionViewAtIndex(currentIndex, GridView.Contain);
                         }
 
+                        // Items appearing under a still pointer must not steal the selection
+                        function selectHovered(item, index) {
+                            const position = item.mapToItem(root, item.mouseX, item.mouseY);
+                            if (Math.abs(position.x - pointerPosition.x) < 1 && Math.abs(position.y - pointerPosition.y) < 1) return;
+                            pointerPosition = Qt.point(position.x, position.y);
+                            currentIndex = index;
+                        }
+
                         function activateCurrent() {
+                            if (currentIndex < 0 || currentIndex >= grid.model.count) return;
                             const filePath = grid.model.get(currentIndex, "filePath");
                             root.selectWallpaperPath(filePath);
                         }
 
                         model: Wallpapers.folderModel
-                        onModelChanged: currentIndex = 0
                         delegate: WallpaperDirectoryItem {
+                            id: directoryItem
                             required property var modelData
                             required property int index
                             fileModelData: modelData
                             width: grid.cellWidth
                             height: grid.cellHeight
-                            colBackground: (index === grid?.currentIndex || containsMouse) ? Appearance.colors.colPrimary : (fileModelData.filePath === Config.options.background.wallpaperPath) ? Appearance.colors.colSecondaryContainer : ColorUtils.transparentize(Appearance.colors.colPrimaryContainer)
-                            colText: (index === grid.currentIndex || containsMouse) ? Appearance.colors.colOnPrimary : (fileModelData.filePath === Config.options.background.wallpaperPath) ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer0
+                            colBackground: (index === grid?.currentIndex) ? Appearance.colors.colPrimary : (fileModelData.filePath === Config.options.background.wallpaperPath) ? Appearance.colors.colSecondaryContainer : ColorUtils.transparentize(Appearance.colors.colPrimaryContainer)
+                            colText: (index === grid?.currentIndex) ? Appearance.colors.colOnPrimary : (fileModelData.filePath === Config.options.background.wallpaperPath) ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer0
 
-                            onEntered: {
-                                grid.currentIndex = index;
-                            }
+                            onEntered: grid.selectHovered(directoryItem, index)
+                            onPositionChanged: grid.selectHovered(directoryItem, index)
 
                             onActivated: {
                                 root.selectWallpaperPath(fileModelData.filePath);
@@ -401,11 +420,18 @@ MouseArea {
                                 // Search
                                 onTextChanged: {
                                     Wallpapers.searchQuery = text;
+                                    grid.currentIndex = text.length > 0 ? 0 : -1; // Enter picks the first result when searching
                                 }
 
                                 Keys.onPressed: event => {
                                     if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_V) { // Intercept Ctrl+V to handle "paste to go to" in pickers
                                         root.handleFilePasting(event);
+                                        return;
+                                    } else if (event.key === Qt.Key_Backspace && text.length === 0) {
+                                        // Ignore auto-repeat so holding the key to clear the search doesn't change folder
+                                        if (!event.isAutoRepeat)
+                                            Wallpapers.navigateBack();
+                                        event.accepted = true;
                                         return;
                                     } else if (text.length !== 0) {
                                         // No filtering, just navigate grid
