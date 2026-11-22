@@ -12,36 +12,67 @@ import qs.modules.waffle.looks
 GridLayout {
     id: root
 
+    required property list<DesktopEntry> desktopEntries
+
     columns: 4
 
-    Component {
-        id: aggAppCatComp
-        AggregatedAppCategoryModel {}
-    }
     property list<AggregatedAppCategoryModel> aggregatedCategories: [
-        aggAppCatComp.createObject(null, {
-            name: Translation.tr("Productivity"),
-            categories: ["Development", "Education", "Network", "Office"]
-        }), aggAppCatComp.createObject(null, {
-            name: Translation.tr("Utilities & Tools"),
-            categories: ["Utility", "Science"]
-        }), aggAppCatComp.createObject(null, {
-            name: Translation.tr("Creativity"),
-            categories: ["AudioVideo", "Graphics"]
-        }), aggAppCatComp.createObject(null, {
-            name: Translation.tr("System"),
-            categories: ["Settings", "System"]
-        }), aggAppCatComp.createObject(null, {
-            name: Translation.tr("Other"),
-            categories: ["Game"]
-        }), 
+        AggregatedAppCategoryModel {
+            name: Translation.tr("Development")
+            categories: ["Development"]
+        },
+        AggregatedAppCategoryModel {
+            name: Translation.tr("Education")
+            categories: ["Education"]
+        },
+        AggregatedAppCategoryModel {
+            name: Translation.tr("Graphics")
+            categories: ["Graphics"]
+        },
+        AggregatedAppCategoryModel {
+            name: Translation.tr("Internet")
+            categories: ["Network"]
+        },
+        AggregatedAppCategoryModel {
+            name: Translation.tr("Multimedia")
+            categories: ["AudioVideo"]
+        },
+        AggregatedAppCategoryModel {
+            name: Translation.tr("Office")
+            categories: ["Office"]
+        },
+        AggregatedAppCategoryModel {
+            name: Translation.tr("System")
+            categories: ["System", "Settings"]
+        },
+        AggregatedAppCategoryModel {
+            name: Translation.tr("Utilities")
+            categories: ["Utility"]
+        },
+        AggregatedAppCategoryModel {
+            name: Translation.tr("Lost & Found")
+            categories: []
+        }
     ]
+
+    function appsInCategory(category: AggregatedAppCategoryModel): var {
+        if (category.categories.length > 0)
+            return root.desktopEntries.filter(app => app.categories.some(c => category.categories.includes(c)));
+
+        // No categories = Lost & Found, which gets whatever the others didn't
+        const known = new Set();
+        for (const other of root.aggregatedCategories)
+            other.categories.forEach(c => known.add(c));
+        return root.desktopEntries.filter(app => !app.categories.some(c => known.has(c)));
+    }
 
     Repeater {
         model: root.aggregatedCategories
         delegate: AppCategory {
             required property var modelData
             aggregatedCategory: modelData
+            desktopEntries: root.appsInCategory(modelData)
+            visible: desktopEntries.length > 0
         }
     }
 
@@ -50,6 +81,7 @@ GridLayout {
     component AppCategory: Item {
         id: categoryItem
         property AggregatedAppCategoryModel aggregatedCategory
+        property list<DesktopEntry> desktopEntries
         implicitWidth: categoryLayout.implicitWidth
         implicitHeight: categoryLayout.implicitHeight
         ColumnLayout {
@@ -61,6 +93,7 @@ GridLayout {
                 id: categoryGrid
                 Layout.fillWidth: true
                 aggregatedCategory: categoryItem.aggregatedCategory
+                desktopEntries: categoryItem.desktopEntries
             }
 
             WButton {

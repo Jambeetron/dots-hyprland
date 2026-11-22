@@ -151,6 +151,12 @@ Singleton {
                 }
             }
 
+            property JsonObject waffle: JsonObject {
+                property JsonObject startMenu: JsonObject {
+                    property string allAppsView: "category" // "category", "grid", "list"
+                }
+            }
+
             property JsonObject timer: JsonObject {
                 property JsonObject pomodoro: JsonObject {
                     property bool running: false

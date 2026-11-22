@@ -45,6 +45,8 @@ WButton {
         }
     }
     WToolTip {
+        // Disabling (the letter picker over the list) doesn't reset hovered
+        extraVisibleCondition: root.enabled
         text: root.desktopEntry.name
     }
 

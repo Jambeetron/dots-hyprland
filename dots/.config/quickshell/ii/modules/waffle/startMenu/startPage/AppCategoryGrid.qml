@@ -13,11 +13,7 @@ import qs.modules.waffle.looks
 Rectangle {
     id: root
     property AggregatedAppCategoryModel aggregatedCategory
-    property list<DesktopEntry> desktopEntries: [...DesktopEntries.applications.values.filter(app => {
-        const appCategories = app.categories;
-        const gridCategories = root.aggregatedCategory.categories;
-        return appCategories.some(cat => gridCategories.indexOf(cat) !== -1);
-    })].sort((a, b) => a.name.localeCompare(b.name));
+    property list<DesktopEntry> desktopEntries
 
     property Item windowRootItem: {
         var item = root;
@@ -31,6 +27,9 @@ Rectangle {
         return item;
     }
     function openCategoryFolder() {
+        // Not a binding, as mapping doesn't update when the page gets scrolled
+        const win = root.windowRootItem;
+        categoryFolderPopup.windowCenterPoint = root.mapFromItem(win, win.width / 2, win.height / 2);
         categoryFolderPopup.open();
     }
 
@@ -77,14 +76,10 @@ Rectangle {
         // I don't even know what the fuck is going on at this point
         // I hate point mapping
         property point originPoint: categoryOpenButtonLoader.mapToItem(root, categoryOpenButtonLoader.width / 2, categoryOpenButtonLoader.height / 2)
-        property point windowCenterPoint: {
-            const rootContentItem = root.windowRootItem;
-            const canvasPosInRoot = root.mapFromItem(rootContentItem, rootContentItem.width / 2, rootContentItem.height / 2);
-            const sectionItem = root.parent.parent.parent;
-            const positionInSection = sectionItem.mapFromItem(categoryOpenButtonLoader, categoryOpenButtonLoader.x, categoryOpenButtonLoader.y);
-            const targetY = Math.max(-positionInSection.y + 212, canvasPosInRoot.y);
-            return Qt.point(canvasPosInRoot.x, targetY);
-        }
+        property point windowCenterPoint
+        // Keep the wheel from scrolling the page under the folder
+        modal: true
+        dim: false
 
         enter: Transition {
             NumberAnimation {
