@@ -12,6 +12,7 @@ MouseArea { // Right side | scroll to change volume
     property real lastScrollY: 0
     property bool trackingScroll: false
     property real moveThreshold: 20
+    property bool invertScroll: false // Swaps scrollUp and scrollDown
 
     acceptedButtons: Qt.LeftButton
     hoverEnabled: true
@@ -26,10 +27,11 @@ MouseArea { // Right side | scroll to change volume
     }
 
     onWheel: event => {
-        if (event.angleDelta.y < 0)
-            root.scrollDown(event.angleDelta.y);
-        else if (event.angleDelta.y > 0)
-            root.scrollUp(event.angleDelta.y);
+        const delta = root.invertScroll ? -event.angleDelta.y : event.angleDelta.y;
+        if (delta < 0)
+            root.scrollDown(delta);
+        else if (delta > 0)
+            root.scrollUp(delta);
         // Store the mouse position and start tracking
         root.lastScrollX = event.x;
         root.lastScrollY = event.y;

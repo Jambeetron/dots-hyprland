@@ -93,6 +93,7 @@ Scope {
                     onPressed: {
                         screenCorners.actionForCorner[cornerPanelWindow.corner]();
                     }
+                    invertScroll: !Config.options.interactions.values.wheelUpIncreases
                     onScrollDown: {
                         if (!Config.options.sidebar.cornerOpen.valueScroll)
                             return;

@@ -81,7 +81,8 @@ Singleton {
         if (cur === undefined)
             return;
         const step = root.workspacesBarHovered ? 10 : 1;
-        const target = cur + direction * step;
+        const sign = Config.options.interactions.tabs.wheelUpIncrements ? 1 : -1; // direction is +1 for wheel up
+        const target = cur + direction * sign * step;
         if (target >= 1 && target <= 100)
             Hyprland.dispatch(`hl.dsp.focus({workspace = ${target}})`);
     }

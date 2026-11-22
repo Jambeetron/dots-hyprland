@@ -624,5 +624,10 @@
   "Clear clipboard history (keeps starred) · Ctrl+Shift+Del": "Clear clipboard history (keeps starred) · Ctrl+Shift+Del",
   "Clear clipboard history · Ctrl+Shift+Del": "Clear clipboard history · Ctrl+Shift+Del",
   "Couldn't generate QR code (content too long?)": "Couldn't generate QR code (content too long?)",
-  "%1 actions": "%1 actions"
+  "%1 actions": "%1 actions",
+  "Scroll direction": "Scroll direction",
+  "Scroll up increases volume and brightness": "Scroll up increases volume and brightness",
+  "Applies to scrolling on the bar and screen corners, not to sliders": "Applies to scrolling on the bar and screen corners, not to sliders",
+  "Scroll up goes to next": "Scroll up goes to next",
+  "Applies to horizontal tab bars, calendar months in the sidebar, workspaces (also Super+scroll) and the dock": "Applies to horizontal tab bars, calendar months in the sidebar, workspaces (also Super+scroll) and the dock"
 }

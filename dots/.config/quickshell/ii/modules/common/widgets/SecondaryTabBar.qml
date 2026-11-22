@@ -7,7 +7,7 @@ import qs.modules.common.models
 TabBar {
     id: root
     property real indicatorPadding: 8
-    property bool wheelUpIncrements: false
+    property bool wheelUpIncrements: Config.options.interactions.tabs.wheelUpIncrements
     Layout.fillWidth: true
 
     background: Item {

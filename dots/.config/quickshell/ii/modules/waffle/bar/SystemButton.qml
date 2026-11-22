@@ -56,6 +56,7 @@ BarButton {
                         icon: WIcons.volumeIcon
                     }
                 }
+                invertScroll: !Config.options.interactions.values.wheelUpIncreases
                 onScrollDown: Audio.decrementVolume();
                 onScrollUp: Audio.incrementVolume();
             }

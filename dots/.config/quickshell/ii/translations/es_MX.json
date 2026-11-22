@@ -758,5 +758,10 @@
   "Clear clipboard history (keeps starred) · Ctrl+Shift+Del": "Limpiar historial del portapapeles (conserva destacados) · Ctrl+Shift+Supr",
   "Clear clipboard history · Ctrl+Shift+Del": "Limpiar historial del portapapeles · Ctrl+Shift+Supr",
   "Couldn't generate QR code (content too long?)": "No se pudo generar el código QR (¿contenido demasiado largo?)",
-  "%1 actions": "%1 acciones"
+  "%1 actions": "%1 acciones",
+  "Scroll direction": "Dirección del scroll",
+  "Scroll up increases volume and brightness": "Scroll arriba sube el volumen y el brillo",
+  "Applies to scrolling on the bar and screen corners, not to sliders": "Se aplica al scroll sobre la barra y las esquinas de la pantalla, no a los deslizadores",
+  "Scroll up goes to next": "Scroll arriba pasa al siguiente",
+  "Applies to horizontal tab bars, calendar months in the sidebar, workspaces (also Super+scroll) and the dock": "Se aplica a las pestañas horizontales, los meses del calendario lateral, los espacios de trabajo (también Super+scroll) y el dock"
 }

@@ -348,6 +348,12 @@ Singleton {
                     property int mouseScrollFactor: 120
                     property int touchpadScrollFactor: 450
                 }
+                property JsonObject tabs: JsonObject {
+                    property bool wheelUpIncrements: true // Scroll up = next (tabs, calendar months, workspaces, dock)
+                }
+                property JsonObject values: JsonObject {
+                    property bool wheelUpIncreases: true // Scroll up over the bar or screen corners = more volume/brightness
+                }
                 property JsonObject deadPixelWorkaround: JsonObject { // Hyprland leaves out 1 pixel on the right for interactions
                     property bool enable: false
                 }

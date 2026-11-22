@@ -875,6 +875,35 @@ ContentPage {
     }
 
     ContentSection {
+        icon: "tab"
+        title: Translation.tr("Scroll direction")
+
+        ConfigSwitch {
+            buttonIcon: "swipe_vertical"
+            text: Translation.tr("Scroll up goes to next")
+            checked: Config.options.interactions.tabs.wheelUpIncrements
+            onCheckedChanged: {
+                Config.options.interactions.tabs.wheelUpIncrements = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("Applies to horizontal tab bars, calendar months in the sidebar, workspaces (also Super+scroll) and the dock")
+            }
+        }
+
+        ConfigSwitch {
+            buttonIcon: "volume_up"
+            text: Translation.tr("Scroll up increases volume and brightness")
+            checked: Config.options.interactions.values.wheelUpIncreases
+            onCheckedChanged: {
+                Config.options.interactions.values.wheelUpIncreases = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("Applies to scrolling on the bar and screen corners, not to sliders")
+            }
+        }
+    }
+
+    ContentSection {
         icon: "wallpaper_slideshow"
         title: Translation.tr("Wallpaper selector")
 

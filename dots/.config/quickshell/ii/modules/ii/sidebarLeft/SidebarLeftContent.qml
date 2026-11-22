@@ -55,7 +55,6 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 tabButtonList: root.tabButtonList
                 currentIndex: swipeView.currentIndex
-                wheelUpIncrements: true
             }
         }
 

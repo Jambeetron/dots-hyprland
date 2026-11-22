@@ -28,11 +28,9 @@ Item {
     MouseArea {
         anchors.fill: parent
         onWheel: (event) => {
-            if (event.angleDelta.y > 0) {
-                monthShift++;
-            } else if (event.angleDelta.y < 0) {
-                monthShift--;
-            }
+            if (event.angleDelta.y === 0) return;
+            const next = (event.angleDelta.y > 0) === Config.options.interactions.tabs.wheelUpIncrements;
+            monthShift += next ? 1 : -1;
         }
     }
 

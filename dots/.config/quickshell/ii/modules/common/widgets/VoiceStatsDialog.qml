@@ -95,7 +95,6 @@ Item {
                 id: tabBar
                 Layout.leftMargin: root.dialogPadding
                 Layout.rightMargin: root.dialogPadding
-                wheelUpIncrements: true // Wheel up: Choose -> Voices -> Accuracy; wheel down: back
                 currentIndex: root.currentTab
                 onCurrentIndexChanged: root.currentTab = currentIndex
                 SecondaryTabButton {

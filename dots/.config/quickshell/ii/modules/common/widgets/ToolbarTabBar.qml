@@ -10,7 +10,7 @@ Item {
     id: root
     property alias currentIndex: tabBar.currentIndex
     required property var tabButtonList
-    property bool wheelUpIncrements: false
+    property bool wheelUpIncrements: Config.options.interactions.tabs.wheelUpIncrements
 
     function incrementCurrentIndex() {
         tabBar.incrementCurrentIndex();

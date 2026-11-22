@@ -108,7 +108,7 @@ ButtonMouseArea {
             return;
         // Dispatch an absolute id instead of "r+N"/"r-N": the relative form
         // wraps around past workspace 1/100 instead of refusing to move.
-        const target = cur + direction;
+        const target = cur + (Config.options.interactions.tabs.wheelUpIncrements ? direction : -direction);
         if (target >= 1 && target <= 100)
             Hyprland.dispatch(`hl.dsp.focus({workspace = ${target}})`);
     }

@@ -340,7 +340,8 @@ Item {
     }
 
     // Wheel up -> apps slide left (reveal the right end), wheel down -> apps
-    // slide right. Horizontal touchpad swipes follow the fingers.
+    // slide right (reversed when interactions.tabs.wheelUpIncrements is off).
+    // Horizontal touchpad swipes follow the fingers.
     // Pointer handlers on this container (the ListView's parent), NOT an
     // overlay item on top of the icons: handlers here never take part in
     // press delivery, so clicks and drag-to-reorder on the icons are
@@ -352,7 +353,8 @@ Item {
         onWheel: event => {
             const slot = (Config.options?.dock.height ?? 60) - 25;
             const useY = Math.abs(event.angleDelta.y) >= Math.abs(event.angleDelta.x);
-            const delta = useY ? event.angleDelta.y : -event.angleDelta.x;
+            const sign = Config.options.interactions.tabs.wheelUpIncrements ? 1 : -1;
+            const delta = useY ? event.angleDelta.y * sign : -event.angleDelta.x;
             root.scrollBy(delta / 120 * slot, true);
         }
     }
